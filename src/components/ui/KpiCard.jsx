@@ -24,19 +24,24 @@ export default function KpiCard({
   value,
   unit,
   caption,
+  delta,
   tone = 'neutral',
   compact = false,
   query,
   isEmpty,
   empty,
 }) {
+  const deltaStyle =
+    delta && /^[+-]/.test(delta)
+      ? delta.startsWith('+')
+        ? 'text-warn'
+        : 'text-ok'
+      : 'text-text-2'
+
   return (
-    <GlassPanel className="relative flex min-h-[124px] flex-col gap-1 overflow-hidden p-5">
-      <span
-        className={`absolute inset-y-0 left-0 w-[3px] ${TONE_ACCENT[tone]}`}
-        aria-hidden="true"
-      />
-      <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-2">
+    <GlassPanel elevated className="relative flex min-h-[132px] flex-col gap-1 overflow-hidden p-6 md:p-8">
+      <span className={`absolute inset-y-0 left-0 w-[3px] ${TONE_ACCENT[tone]}`} aria-hidden="true" />
+      <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-2">
         {label}
       </span>
       <QueryState
@@ -45,15 +50,14 @@ export default function KpiCard({
         empty={empty}
         skeleton={<div className="mt-2 h-8 w-24 animate-pulse rounded-control bg-white/10" />}
       >
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline gap-2 mt-auto">
           <span
-            className={`tnum font-semibold leading-tight ${
-              compact ? 'text-xl' : 'text-[32px] leading-none'
-            } ${TONE_TEXT[tone]}`}
+            className={`tnum font-bold leading-none ${compact ? 'text-2xl' : 'text-[32px]'} ${TONE_TEXT[tone]}`}
           >
             {value}
           </span>
           {unit ? <span className="text-sm text-text-2">{unit}</span> : null}
+          {delta ? <span className={`ml-auto text-xs font-medium ${deltaStyle}`}>{delta}</span> : null}
         </div>
       </QueryState>
       {caption ? <span className="mt-auto pt-2 text-xs text-text-2">{caption}</span> : null}

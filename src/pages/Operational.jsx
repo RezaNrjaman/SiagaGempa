@@ -112,46 +112,38 @@ export default function Operational() {
         />
       </section>
 
-      <section className="grid gap-4 md:gap-6 xl:grid-cols-12">
+      <section className="grid gap-4 md:gap-6 md:grid-cols-2">
         <ChartCard
-          className="xl:col-span-5"
+          className="md:col-span-2"
           title="Peta gempa terkini"
           caption="Radius titik sebanding magnitudo. Warna: M < 5 biru, 5–5.9 kuning, ≥ 6 merah. Peta vektor tanpa tile."
           query={latest}
-          skeleton={
-            <div
-              className="h-[320px] w-full animate-pulse rounded-control border border-white/10 bg-white/5 md:h-[420px]"
-              aria-hidden="true"
-            />
-          }
+          skeleton={<div className="h-[320px] w-full animate-pulse rounded-control border border-white/10 bg-white/5" aria-hidden="true" />}
         >
-          <QuakeMap
-            mode="points"
-            data={rows}
-            selectedId={selectedId}
-            onSelect={(id) => setSelectedId((prev) => (prev === id ? null : id))}
-          />
+          <QuakeMap mode="points" data={rows} selectedId={selectedId} />
         </ChartCard>
 
         <ChartCard
-          className="xl:col-span-7"
+          className="md:col-span-2"
           title="15 gempa terakhir"
-          caption="Sumber: BMKG. Klik baris untuk menyorot titik di peta."
+          caption="Data terbaru dari feed BMKG live. Klik baris untuk menyorot titik di peta."
           query={latest}
           isEmpty={!hasLatest}
-          empty="Belum ada gempa tercatat dalam 24 jam terakhir."
+          empty="Belum ada data gempa terbaru."
         >
           <DataTable
             columns={columns}
             rows={rows}
+            rowKey={(row) => `${row.event_time}-${row.magnitude}`}
+            onRowClick={(row) => setSelectedId(`${row.event_time}-${row.magnitude}`)}
             selectedId={selectedId}
-            onRowClick={(row) => setSelectedId((prev) => (prev === row.id ? null : row.id))}
+            maxHeight="420px"
           />
         </ChartCard>
       </section>
 
       <p className="text-xs text-text-2">
-        Keterangan: feed BMKG berisi gempa M ≥ 5 atau yang dirasakan.
+        Sumber: BMKG (live). Proyek akademik, bukan produk resmi BMKG.
       </p>
     </div>
   )

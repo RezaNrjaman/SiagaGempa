@@ -22,6 +22,17 @@ body {
   outline-offset: 2px;
 }
 
+/* Bentuk elemen (PRD 10.4). */
+.rounded-panel {
+  border-radius: var(--radius-panel);
+}
+.rounded-control {
+  border-radius: var(--radius-control);
+}
+.shadow-card {
+  box-shadow: var(--card-shadow);
+}
+
 /* Angka selalu tabular agar kolom stabil (PRD 10.4). */
 .tnum {
   font-variant-numeric: tabular-nums;

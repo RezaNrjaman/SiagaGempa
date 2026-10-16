@@ -9,8 +9,8 @@ function Chip({ label, selected, onClick }) {
       onClick={onClick}
       className={`inline-flex items-center gap-1 rounded-control border px-2.5 py-1 text-xs font-medium transition-colors ${
         selected
-          ? 'border-brand-500 bg-brand-700 text-text-1'
-          : 'border-white/20 text-text-2 hover:bg-white/10'
+          ? 'border-brand-500 bg-brand-700 text-text-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300'
+          : 'border-white/10 text-text-2/70 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300'
       }`}
     >
       {selected ? <Check size={12} strokeWidth={2} aria-hidden="true" /> : null}
@@ -30,7 +30,7 @@ function Field({ field, value, onChange }) {
     }
     return (
       <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-text-2">{field.label}</span>
+        <span className="text-[10px] font-medium text-text-2">{field.label}</span>
         <div className="flex flex-wrap gap-1.5">
           {field.options.map((option) => (
             <Chip
@@ -47,11 +47,11 @@ function Field({ field, value, onChange }) {
 
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-xs font-medium text-text-2">{field.label}</span>
+      <span className="text-[10px] font-medium text-text-2">{field.label}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-control border border-white/20 bg-brand-900 px-3 py-1.5 text-sm text-text-1"
+        className="rounded-control border border-white/20 bg-brand-900 px-3 py-1.5 text-sm text-text-1 focus:border-brand-300 focus:outline-none"
       >
         {field.options.map((option) => (
           <option key={option.value} value={option.value}>
@@ -66,7 +66,7 @@ function Field({ field, value, onChange }) {
 /* Dikendalikan dari URL oleh halaman pemanggil (PRD 10.5). */
 export default function FilterBar({ fields, value, onChange }) {
   return (
-    <GlassPanel className="p-3 md:p-4">
+    <GlassPanel elevated className="p-3 md:p-4">
       <div className="flex flex-wrap items-start gap-x-6 gap-y-3">
         {fields.map((field) => (
           <Field

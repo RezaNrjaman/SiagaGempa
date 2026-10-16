@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-/* Token merek dan status (PRD 10.2). Warna status hanya untuk status. */
+/* Token merek dan status (PRD 10.2). Warna status hanya untuk status. Nilai tetap proyek. */
 @theme {
   --color-brand-950: #061a3a;
   --color-brand-900: #0a2a5e;
@@ -23,18 +23,26 @@
   --radius-control: 12px;
 }
 
-/* Variabel permukaan kaca dan latar (PRD 10.3). */
+/* Variabel permukaan dan latar (PRD 10.3). */
 :root {
-  --glass-bg: rgb(255 255 255 / 0.08);
-  --glass-bg-hover: rgb(255 255 255 / 0.12);
-  --glass-border: rgb(255 255 255 / 0.18);
+  --glass-bg: rgb(255 255 255 / 0.06);
+  --glass-bg-hover: rgb(255 255 255 / 0.10);
+  --glass-border: rgb(255 255 255 / 0.14);
+  --glass-border-soft: rgb(255 255 255 / 0.06);
   --glass-blur: 16px;
-  --glass-shadow: 0 8px 32px rgb(0 0 0 / 0.28);
+  --glass-shadow: 0 8px 32px rgb(0 0 0 / 0.30);
+  --card-shadow: 0 4px 20px rgb(0 0 0 / 0.25);
   --app-gradient: linear-gradient(180deg, #0a2a5e 0%, #061a3a 100%);
 }
 
 @media (max-width: 768px) {
   :root {
     --glass-blur: 10px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-bg: rgb(10 42 94 / 0.96);
   }
 }

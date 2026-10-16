@@ -2,15 +2,12 @@ import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Layers } from 'lucide-react'
 import ChartCard from '@/components/ui/ChartCard'
-import ChartSkeleton from '@/components/ui/ChartSkeleton'
 import DataTable from '@/components/ui/DataTable'
 import FilterBar from '@/components/ui/FilterBar'
 import KpiCard from '@/components/ui/KpiCard'
 import StatusBadge from '@/components/ui/StatusBadge'
-import SeriesChart from '@/components/charts/SeriesChart'
 import { DEFAULT_MONTH, DEPTH_CLASSES, DATA_RANGE, MAG_CLASSES, NATIONAL } from '@/config'
 import { useRpc } from '@/hooks/useRpc'
-import { PALETTE } from '@/lib/palette'
 import {
   formatMonth,
   formatMonthShort,
@@ -18,6 +15,8 @@ import {
   formatPercent,
   monthRange,
 } from '@/lib/format'
+import { PALETTE } from '@/lib/palette'
+import ChartSkeleton from '@/components/ui/ChartSkeleton'
 
 const MONTH_OPTIONS = monthRange(DATA_RANGE.start, DATA_RANGE.end).map((month) => ({
   value: month,
@@ -137,7 +136,9 @@ export default function Tactical() {
             <Layers size={14} strokeWidth={1.75} aria-hidden="true" />
             SiagaGempa · Jendela bulan
           </div>
-          <h1 className="mt-1 text-xl font-semibold text-text-1">Dashboard Taktis</h1>
+          <div className="mt-1 flex items-center gap-3">
+            <h1 className="text-xl font-semibold text-text-1">Dashboard Taktis</h1>
+          </div>
         </div>
         <span className="text-xs text-text-2">
           {formatMonth(bulan)} · {prov}
@@ -151,14 +152,8 @@ export default function Tactical() {
           label="Gempa bulan terpilih"
           value={current ? formatNumber(current.quakes) : ''}
           unit="gempa"
+          delta={delta != null ? formatPercent(delta, 1) : undefined}
           caption={`Nasional/terfilter · ${formatMonth(bulan)}`}
-          query={series}
-        />
-        <KpiCard
-          label="Selisih vs baseline"
-          value={delta != null ? formatPercent(delta, 1) : ''}
-          tone={delta != null && delta > 0 ? 'warn' : 'ok'}
-          caption="Baseline = rata-rata bulan yang sama tahun sebelumnya"
           query={series}
         />
         <KpiCard
