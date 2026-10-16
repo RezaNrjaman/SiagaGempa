@@ -1,4 +1,4 @@
-import { MonitorPlay, Waves } from 'lucide-react'
+import { MonitorPlay, UserRound, Waves } from 'lucide-react'
 import { useState } from 'react'
 import { LogIn } from 'lucide-react'
 import { Navigate } from 'react-router-dom'
@@ -8,20 +8,60 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import { ROLES } from '@/config'
 import { useAuth } from '@/context/AuthContext'
 
+const REMEMBER_KEY = 'sg.pw.remember'
+
+/* Tiga akun tunggal yang diberikan pengelola; password kini ditetapkan pengguna. */
+const QUICK_ACCOUNTS = [
+  { username: 'admin1', label: 'admin1', hint: 'Dashboard Operasional' },
+  { username: 'admin2', label: 'admin2', hint: 'Dashboard Taktis' },
+  { username: 'admin3', label: 'admin3', hint: 'Dashboard Strategis' },
+]
+
+function readRemembered() {
+  try {
+    return sessionStorage.getItem(REMEMBER_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
 export default function Login() {
   const { session, login, error } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(readRemembered() !== '')
   const [submitting, setSubmitting] = useState(false)
+  const [quickError, setQuickError] = useState(null)
 
   /* AUTH-07: sudah login membuka /login diarahkan ke beranda role. */
   if (session) return <Navigate to={ROLES[session.role]?.path ?? '/'} replace />
 
+  const handleLogin = async (user, pass) => {
+    setSubmitting(true)
+    const ok = await login(user, pass)
+    if (ok && remember) {
+      sessionStorage.setItem(REMEMBER_KEY, pass)
+    } else if (!ok) {
+      setQuickError('Username atau password salah.')
+      sessionStorage.removeItem(REMEMBER_KEY)
+    }
+    setSubmitting(false)
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
-    setSubmitting(true)
-    await login(username, password)
-    setSubmitting(false)
+    await handleLogin(username, password)
+  }
+
+  /* Tombol cepat: password teringkat di perangkat → sekali klik langsung masuk. */
+  const handleQuick = async (account) => {
+    const remembered = readRemembered()
+    if (remembered) {
+      await handleLogin(account.username, remembered)
+      return
+    }
+    setUsername(account.username)
+    setQuickError(null)
   }
 
   return (
@@ -58,9 +98,39 @@ export default function Login() {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-text-1">Masuk</h2>
-            <p className="text-xs text-text-2">
-            Gunakan akun yang diberikan pengelola. Password disimpan di password manager.
-          </p>
+            <p className="mt-1 text-xs text-text-2">
+              Ketik password sekali, lalu pilih tombol cepat — tidak perlu mengulang. Password hanya
+              tersimpan di perangkat ini (sessionStorage), tidak di kode.
+            </p>
+          </div>
+
+          {/* Akses cepat per akun */}
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-medium text-text-2">Akun cepat</p>
+            {QUICK_ACCOUNTS.map((account) => (
+              <button
+                key={account.username}
+                type="button"
+                disabled={submitting}
+                onClick={() => handleQuick(account)}
+                className="flex items-center gap-3 rounded-control border border-white/20 bg-white/[0.04] px-3 py-2.5 text-left transition-colors hover:bg-white/10 disabled:opacity-60"
+              >
+                <UserRound size={18} strokeWidth={1.75} className="text-brand-300" aria-hidden="true" />
+                <span className="text-sm font-medium text-text-1">{account.label}</span>
+                <span className="text-xs text-text-2">{account.hint}</span>
+              </button>
+            ))}
+            {quickError ? (
+              <p role="alert" className="rounded-control border border-danger/40 bg-danger/10 px-3 py-2 text-xs text-danger">
+                {quickError}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="flex items-center gap-3 text-xs text-text-2">
+            <span className="h-px flex-1 bg-white/10" aria-hidden="true" />
+            atau isi manual
+            <span className="h-px flex-1 bg-white/10" aria-hidden="true" />
           </div>
 
           <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -87,6 +157,16 @@ export default function Login() {
                 className="rounded-control border border-white/20 bg-brand-900/70 px-3 py-2 text-sm text-text-1 placeholder:text-text-2/60 hover:border-white/30 focus:border-brand-300"
                 placeholder="••••••••••••"
               />
+            </label>
+
+            <label className="flex items-center gap-2 text-xs text-text-2">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(event) => setRemember(event.target.checked)}
+                className="h-3.5 w-3.5 rounded border-white/30 bg-brand-900/70 accent-blue-400"
+              />
+              Ingat password di perangkat ini
             </label>
 
             {error ? (
