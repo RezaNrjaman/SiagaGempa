@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { getSession, signIn as authSignIn, signOut as authSignOut } from '@/lib/auth'
+import { getSession, MISSING_BACKEND, signIn as authSignIn, signOut as authSignOut } from '@/lib/auth'
 import { clearSessionCache } from '@/lib/queryClient'
 
 const AuthContext = createContext(null)
@@ -17,6 +17,10 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (username, password) => {
     setError(null)
     const result = await authSignIn(username, password)
+    if (result.error === 'missing') {
+      setError(MISSING_BACKEND)
+      return false
+    }
     if (result.error === 'profile') {
       setError('Profil tidak ditemukan. Hubungi pengelola sistem.')
       return false

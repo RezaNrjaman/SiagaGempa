@@ -54,7 +54,7 @@ const columns = [
 export default function Operational() {
   const [selectedId, setSelectedId] = useState(null)
   const summary = useRpc('ops_summary', null, 'live')
-  const latest = useRpc('ops_latest', { limit: 15 }, 'live')
+  const latest = useRpc('ops_latest', { p_limit: 15 }, 'live')
 
   const data = summary.data
   const rows = latest.data ?? []

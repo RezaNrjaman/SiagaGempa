@@ -60,13 +60,22 @@ export default function Tactical() {
   const mag = searchParams.get('mag') ? searchParams.get('mag').split(',') : MAG_CLASSES
   const dalam = searchParams.get('dalam') ? searchParams.get('dalam').split(',') : DEPTH_CLASSES
 
-  const series = useRpc('tactical_series', { month: bulan, province: prov, mag, depth: dalam })
-  const ranking = useRpc('tactical_ranking', { month: bulan, mag, depth: dalam })
+  /* PRD §8: p_month bertipe date (YYYY-MM-01), p_province null artinya nasional. */
+  const pMonth = `${bulan}-01`
+  const pProvince = prov === NATIONAL ? null : prov
+
+  const series = useRpc('tactical_series', {
+    p_month: pMonth,
+    p_province: pProvince,
+    p_mag: mag,
+    p_depth: dalam,
+  })
+  const ranking = useRpc('tactical_ranking', { p_month: pMonth, p_mag: mag, p_depth: dalam })
   const distribution = useRpc('tactical_distribution', {
-    month: bulan,
-    province: prov,
-    mag,
-    depth: dalam,
+    p_month: pMonth,
+    p_province: pProvince,
+    p_mag: mag,
+    p_depth: dalam,
   })
 
   const updateParams = (partial) => {
