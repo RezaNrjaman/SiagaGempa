@@ -9,3 +9,7 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 *.log
+
+# PRD §7.5: kredensial akun tidak masuk repo (jalankan lokal saja)
+supabase/seed/create-admin-users.sql
+scripts/create-admin-users.mjs
