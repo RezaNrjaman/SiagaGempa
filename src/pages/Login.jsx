@@ -113,6 +113,22 @@ export default function Login() {
                   Tiga role dashboard: operasional, taktis, strategis
                 </li>
               </ul>
+              <figure className="mt-8 flex items-center justify-center">
+                <img
+                  src="/assets/login-visual-640.webp"
+                  srcSet="/assets/login-visual-640.webp 640w, /assets/login-visual-1280.webp 1280w"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  width={612}
+                  height={684}
+                  decoding="async"
+                  loading="eager"
+                  alt="Peta intensitas gempa M7,5 Palu, 28 September 2018"
+                  className="rounded-panel border border-white/10 shadow-card"
+                />
+                <figcaption className="mt-2 text-[9px] text-text-2/60 max-w-md text-center">
+                  Sumber: USGS intensity map, gempa M7,5 Palu 28 September 2018 — domain publik.
+                </figcaption>
+              </figure>
             </div>
             <p className="text-[10px] text-text-2/60">
               Proyek akademik, bukan produk resmi BMKG.
@@ -230,7 +246,10 @@ export default function Login() {
               </button>
             </form>
 
-            <p className="mt-6 text-[10px] text-text-2">Proyek akademik, bukan produk resmi BMKG.</p>
+            <p className="mt-6 text-[10px] text-text-2">
+              Proyek akademik, bukan produk resmi BMKG. Foto visual: USGS intensity map,
+              gempa M7,5 Palu 28 September 2018 (domain publik, Wikimedia Commons).
+            </p>
           </GlassPanel>
         </div>
       </div>
