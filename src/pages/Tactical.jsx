@@ -17,6 +17,7 @@ import {
 } from '@/lib/format'
 import { PALETTE } from '@/lib/palette'
 import ChartSkeleton from '@/components/ui/ChartSkeleton'
+import SeriesChart from '@/components/charts/SeriesChart'
 
 const MONTH_OPTIONS = monthRange(DATA_RANGE.start, DATA_RANGE.end).map((month) => ({
   value: month,
