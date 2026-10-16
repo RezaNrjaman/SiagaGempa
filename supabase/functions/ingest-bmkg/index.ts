@@ -38,7 +38,8 @@ async function ingest(rows) {
       apikey: SERVICE_ROLE,
       Authorization: `Bearer ${SERVICE_ROLE}`,
     },
-    body: JSON.stringify(rows),
+    /* PRD §7.2: fungsi bernama ingest_quakes(p_rows jsonb) → wajib objek p_rows. */
+    body: JSON.stringify({ p_rows: rows }),
   })
   const text = await response.text()
   if (!response.ok) throw new Error(`ingest_quakes → HTTP ${response.status}: ${text}`)
