@@ -8,6 +8,11 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import { ROLES } from '@/config'
 import { useAuth } from '@/context/AuthContext'
 
+/*
+ * [Patch PRD §5.1 oleh pemilik — app single-user]: kredensial pengingat
+ * password disimpan di localStorage per perangkat supaya tidak diketik ulang
+ * setiap membuka browser. Token sesi Supabase tetap di sessionStorage.
+ */
 const REMEMBER_KEY = 'sg.pw.remember'
 
 /* Tiga akun tunggal yang diberikan pengelola; password kini ditetapkan pengguna. */
@@ -19,7 +24,7 @@ const QUICK_ACCOUNTS = [
 
 function readRemembered() {
   try {
-    return sessionStorage.getItem(REMEMBER_KEY) ?? ''
+    return localStorage.getItem(REMEMBER_KEY) ?? ''
   } catch {
     return ''
   }
@@ -40,10 +45,10 @@ export default function Login() {
     setSubmitting(true)
     const ok = await login(user, pass)
     if (ok && remember) {
-      sessionStorage.setItem(REMEMBER_KEY, pass)
+      localStorage.setItem(REMEMBER_KEY, pass)
     } else if (!ok) {
       setQuickError('Username atau password salah.')
-      sessionStorage.removeItem(REMEMBER_KEY)
+      localStorage.removeItem(REMEMBER_KEY)
     }
     setSubmitting(false)
   }

@@ -85,6 +85,10 @@ SiagaGempa adalah satu website dengan tiga dashboard berbasis peran untuk pengam
 ## 5. Aturan Kode Bersih (wajib)
 
 ### 5.1 Larangan
+
+(Dipatch oleh pemilik, app single-user: fitur "ingat password per perangkat" mengizinkan
+satukan `localStorage` untuk `sg.pw.remember` saja; token sesi Supabase tetap di
+`sessionStorage`, dan tidak ada kredensial yang masuk repo/kode.)
 - Tidak ada fitur di luar daftar kebutuhan di dokumen ini.
 - Tidak ada kode mati, komponen tidak terpakai, `console.log`, atau komentar yang hanya mengulang kode.
 - Tidak ada angka ajaib atau teks label yang tersebar. Semua konstanta di `src/config.js`.
