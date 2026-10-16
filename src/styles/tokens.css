@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+/* Token merek dan status (PRD 10.2). Warna status hanya untuk status. */
+@theme {
+  --color-brand-950: #061a3a;
+  --color-brand-900: #0a2a5e;
+  --color-brand-700: #0f4c9c;
+  --color-brand-500: #1e78d2;
+  --color-brand-300: #7db7f0;
+
+  --color-text-1: #f2f7ff;
+  --color-text-2: #a9bcd9;
+
+  --color-ok: #34c38f;
+  --color-warn: #f5b82e;
+  --color-danger: #f0524f;
+
+  --color-grid: rgb(255 255 255 / 0.1);
+
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --radius-panel: 16px;
+  --radius-control: 12px;
+}
+
+/* Variabel permukaan kaca dan latar (PRD 10.3). */
+:root {
+  --glass-bg: rgb(255 255 255 / 0.08);
+  --glass-bg-hover: rgb(255 255 255 / 0.12);
+  --glass-border: rgb(255 255 255 / 0.18);
+  --glass-blur: 16px;
+  --glass-shadow: 0 8px 32px rgb(0 0 0 / 0.28);
+  --app-gradient: linear-gradient(180deg, #0a2a5e 0%, #061a3a 100%);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --glass-blur: 10px;
+  }
+}

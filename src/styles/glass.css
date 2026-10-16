@@ -1,0 +1,32 @@
+/* Satu-satunya pembawa kelas .glass. Maksimum dua lapis bertumpuk (PRD 10.3). */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background: rgb(10 42 94 / 0.92);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: rgb(10 42 94 / 0.96);
+    backdrop-filter: none;
+  }
+}
+
+/* Kaca tidak dipakai pada elemen berulang; tabel memakai latar solid. */
+.sg-map .leaflet-container {
+  background: transparent;
+  font-family: inherit;
+  outline: none;
+}
+
+.sg-map .leaflet-control-attribution {
+  display: none;
+}
