@@ -9,48 +9,58 @@ import { ROLES } from '@/config'
 import { useAuth } from '@/context/AuthContext'
 
 /*
- * [Patch PRD §5.1 oleh pemilik — app single-user]: kredensial pengingat
- * password disimpan di localStorage per perangkat supaya tidak diketik ulang
- * setiap membuka browser. Token sesi Supabase tetap di sessionStorage.
+ * [Patch PRD §5.1 oleh pemilik — app single-user]: password pengingat disimpan
+ * di localStorage PER AKUN (`sg.pw.<username>`) supaya tombol cepat tiap
+ * dashboard cukup sekali klik meski password tiap akun berbeda. Token sesi
+ * Supabase tetap di sessionStorage; tidak ada kredensial di kode/repo.
  */
-const REMEMBER_KEY = 'sg.pw.remember'
+const REMEMBER_PREFIX = 'sg.pw.'
 
-/* Tiga akun tunggal yang diberikan pengelola; password kini ditetapkan pengguna. */
+/* Tiga akun tunggal yang diberikan pengelola; password ditetapkan pengelola. */
 const QUICK_ACCOUNTS = [
   { username: 'admin1', label: 'admin1', hint: 'Dashboard Operasional' },
   { username: 'admin2', label: 'admin2', hint: 'Dashboard Taktis' },
   { username: 'admin3', label: 'admin3', hint: 'Dashboard Strategis' },
 ]
 
-function readRemembered() {
+function readRemembered(user) {
   try {
-    return localStorage.getItem(REMEMBER_KEY) ?? ''
+    return localStorage.getItem(`${REMEMBER_PREFIX}${user}`) ?? ''
   } catch {
     return ''
   }
+}
+
+function anyRemembered() {
+  return QUICK_ACCOUNTS.some((account) => readRemembered(account.username) !== '')
 }
 
 export default function Login() {
   const { session, login, error } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [remember, setRemember] = useState(readRemembered() !== '')
+  const [remember, setRemember] = useState(anyRemembered)
   const [submitting, setSubmitting] = useState(false)
   const [quickError, setQuickError] = useState(null)
 
   /* AUTH-07: sudah login membuka /login diarahkan ke beranda role. */
   if (session) return <Navigate to={ROLES[session.role]?.path ?? '/'} replace />
 
-  const handleLogin = async (user, pass) => {
+  const handleLogin = async (user, pass, { silent = false } = {}) => {
     setSubmitting(true)
+    setQuickError(null)
+    const key = `${REMEMBER_PREFIX}${user}`
     const ok = await login(user, pass)
-    if (ok && remember) {
-      localStorage.setItem(REMEMBER_KEY, pass)
-    } else if (!ok) {
-      setQuickError('Username atau password salah.')
-      localStorage.removeItem(REMEMBER_KEY)
+    if (ok) {
+      if (remember) localStorage.setItem(key, pass)
+      else localStorage.removeItem(key)
+    } else {
+      localStorage.removeItem(key)
+      if (!silent) setQuickError('Username atau password salah.')
+      else setQuickError(`Password akun ${user} belum tersimpan — isi manual sekali.`)
     }
     setSubmitting(false)
+    return ok
   }
 
   const handleSubmit = async (event) => {
@@ -58,15 +68,15 @@ export default function Login() {
     await handleLogin(username, password)
   }
 
-  /* Tombol cepat: password teringkat di perangkat → sekali klik langsung masuk. */
+  /* Tombol cepat: password akun ini sudah teringat → sekali klik langsung masuk. */
   const handleQuick = async (account) => {
-    const remembered = readRemembered()
+    const remembered = readRemembered(account.username)
     if (remembered) {
-      await handleLogin(account.username, remembered)
+      await handleLogin(account.username, remembered, { silent: true })
       return
     }
     setUsername(account.username)
-    setQuickError(null)
+    setQuickError(`Isi password ${account.username} sekali (centang "Ingat password"), berikutnya cukup klik.`)
   }
 
   return (
@@ -104,27 +114,36 @@ export default function Login() {
           <div>
             <h2 className="text-lg font-semibold text-text-1">Masuk</h2>
             <p className="mt-1 text-xs text-text-2">
-              Ketik password sekali, lalu pilih tombol cepat — tidak perlu mengulang. Password hanya
-              tersimpan di perangkat ini (sessionStorage), tidak di kode.
+              Isi password <span className="text-text-1">sekali per akun</span>, lalu klik tombol cepat
+              kapan pun — tidak perlu mengetik lagi. Password hanya tersimpan di browser perangkat ini
+              (localStorage), tidak ada di kode.
             </p>
           </div>
 
           {/* Akses cepat per akun */}
           <div className="flex flex-col gap-2">
             <p className="text-xs font-medium text-text-2">Akun cepat</p>
-            {QUICK_ACCOUNTS.map((account) => (
-              <button
-                key={account.username}
-                type="button"
-                disabled={submitting}
-                onClick={() => handleQuick(account)}
-                className="flex items-center gap-3 rounded-control border border-white/20 bg-white/[0.04] px-3 py-2.5 text-left transition-colors hover:bg-white/10 disabled:opacity-60"
-              >
-                <UserRound size={18} strokeWidth={1.75} className="text-brand-300" aria-hidden="true" />
-                <span className="text-sm font-medium text-text-1">{account.label}</span>
-                <span className="text-xs text-text-2">{account.hint}</span>
-              </button>
-            ))}
+            {QUICK_ACCOUNTS.map((account) => {
+              const ready = readRemembered(account.username) !== ''
+              return (
+                <button
+                  key={account.username}
+                  type="button"
+                  disabled={submitting}
+                  onClick={() => handleQuick(account)}
+                  className="flex items-center gap-3 rounded-control border border-white/20 bg-white/[0.04] px-3 py-2.5 text-left transition-colors hover:bg-white/10 disabled:opacity-60"
+                >
+                  <UserRound size={18} strokeWidth={1.75} className="text-brand-300" aria-hidden="true" />
+                  <span className="text-sm font-medium text-text-1">{account.label}</span>
+                  <span className="text-xs text-text-2">{account.hint}</span>
+                  <span
+                    className={`ml-auto text-[10px] font-medium ${ready ? 'text-ok' : 'text-text-2'}`}
+                  >
+                    {ready ? '1 klik' : 'perlu password'}
+                  </span>
+                </button>
+              )
+            })}
             {quickError ? (
               <p role="alert" className="rounded-control border border-danger/40 bg-danger/10 px-3 py-2 text-xs text-danger">
                 {quickError}
