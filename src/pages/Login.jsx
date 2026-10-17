@@ -116,8 +116,6 @@ export default function Login() {
               <figure className="mt-8 flex items-center justify-center">
                 <img
                   src="/assets/login-visual-640.webp"
-                  srcSet="/assets/login-visual-640.webp 640w, /assets/login-visual-1280.webp 1280w"
-                  sizes="(max-width: 768px) 100vw, 50vw"
                   width={612}
                   height={684}
                   decoding="async"

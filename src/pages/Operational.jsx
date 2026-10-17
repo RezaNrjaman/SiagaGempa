@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Activity } from 'lucide-react'
 import ChartCard from '@/components/ui/ChartCard'
 import DataTable from '@/components/ui/DataTable'
+import GlassPanel from '@/components/ui/GlassPanel'
 import KpiCard from '@/components/ui/KpiCard'
 import StatusBadge from '@/components/ui/StatusBadge'
 import QuakeMap from '@/components/map/QuakeMap'
@@ -56,9 +57,18 @@ export default function Operational() {
   const summary = useRpc('ops_summary', null, 'live')
   const latest = useRpc('ops_latest', { p_limit: 15 }, 'live')
 
-  const data = summary.data
+  /* Semua RPC `returns table(...)` -> PostgREST selalu mengirim larik baris.
+     ops_summary mengembalikan tepat satu baris, jadi harus dibuka di sini;
+     memakainya langsung sebagai objek membuat semua KPI kosong. */
+  const data = Array.isArray(summary.data) ? (summary.data[0] ?? null) : summary.data
   const rows = latest.data ?? []
   const hasLatest = rows.length > 0
+
+  /* OPS-08: tanpa baris ringkasan berarti tidak ada gempa 24 jam -> level
+     Hijau, bukan "Memuat" yang menggantung. */
+  const summarySettled = !summary.isPending && !summary.isError
+  const summaryEmpty = summarySettled && !data
+  const alertLevel = data ? data.alert_level : summarySettled ? 'Hijau' : 'Memuat'
 
   return (
     <div className="flex flex-col gap-5 md:gap-6">
@@ -70,7 +80,7 @@ export default function Operational() {
           </div>
           <div className="mt-1 flex items-center gap-3">
             <h1 className="text-xl font-semibold text-text-1">Dashboard Operasional</h1>
-            <StatusBadge label={data ? data.alert_level : 'Memuat'} />
+            <StatusBadge label={alertLevel} />
           </div>
         </div>
         <span className="tnum text-xs text-text-2">
@@ -78,7 +88,23 @@ export default function Operational() {
         </span>
       </div>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* OPS-08: kondisi kosong Replacing KPI agar tidak tampil kartu kosong. */}
+      {summaryEmpty ? (
+        <GlassPanel className="flex flex-col items-start gap-2 px-6 py-8 md:px-8">
+          <p className="text-sm font-medium text-text-1">
+            Belum ada gempa tercatat dalam 24 jam terakhir.
+          </p>
+          <p className="text-xs text-text-2">
+            Level siaga <span className="text-text-1">Hijau</span>. Halaman ini diperbarui
+            otomatis tiap 5 menit; data terbaru akan muncul begitu feed BMKG mengirim
+            gempa berikutnya.
+          </p>
+        </GlassPanel>
+      ) : null}
+
+      <section
+        className={`grid gap-4 sm:grid-cols-2 xl:grid-cols-4${summaryEmpty ? ' hidden' : ''}`}
+      >
         <KpiCard
           label="Gempa terbaru"
           value={data ? formatMagnitude(data.latest_mag) : ''}
@@ -143,7 +169,9 @@ export default function Operational() {
       </section>
 
       <p className="text-xs text-text-2">
-        Sumber: BMKG (live). Proyek akademik, bukan produk resmi BMKG.
+        {/* OPS-07: keterangan permanen tentang cakupan feed. */}
+        Feed BMKG berisi gempa M ≥ 5 atau yang dirasakan. Sumber: BMKG (live). Proyek
+        akademik, bukan produk resmi BMKG.
       </p>
     </div>
   )
