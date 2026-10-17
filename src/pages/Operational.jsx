@@ -9,6 +9,7 @@ import QuakeMap from '@/components/map/QuakeMap'
 import { TONE } from '@/config'
 import { useRpc } from '@/hooks/useRpc'
 import {
+  formatDateWIB,
   formatMagnitude,
   formatNumber,
   formatRelative,
@@ -16,6 +17,11 @@ import {
 } from '@/lib/format'
 
 const columns = [
+  {
+    key: 'event_date',
+    label: 'Tanggal',
+    render: (row) => <span className="tnum">{formatDateWIB(row.event_time)}</span>,
+  },
   {
     key: 'event_time',
     label: 'Waktu WIB',
