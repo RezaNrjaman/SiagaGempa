@@ -30,11 +30,12 @@ Password ketiganya: `siagagempa123`.
 | Skrip | Kegunaan |
 |---|---|
 | `npm run dev` | Server pengembangan |
-| `npm run build` | `lint` lalu `check:assets` lalu `vite build` |
+| `npm run build` | `lint` lalu `vite build` |
 | `npm run preview` | Pratinjau hasil build |
 | `npm run lint` | ESLint |
 | `npm run format` | Prettier |
-| `npm run check:assets` | Menolak raster non-WebP dan berkas > 80 KB di `src/` dan `public/` |
+| `npm run gen:provinces` | Generator data provinsi |
+| `npm run create:admins` | Membuat tiga akun admin di Supabase |
 
 ## Ganti ke backend nyata
 
@@ -91,4 +92,4 @@ src/
   Papua sebagai potongan garis lurus, disederhanakan 0,05°). Geometri provinsi pemekaran Papua
   adalah aproksimasi, bukan batas resmi.
 - Autentikasi disimulasikan di klien. Sesi disimpan di `sessionStorage`.
-- Foto visual halaman login belum disertakan (aturan aset: hanya WebP).
+- Foto visual halaman login dihilangkan atas keputusan pemilik (halaman login tanpa foto).
