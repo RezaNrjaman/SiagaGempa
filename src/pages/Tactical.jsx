@@ -18,6 +18,7 @@ import {
 import { PALETTE } from '@/lib/palette'
 import ChartSkeleton from '@/components/ui/ChartSkeleton'
 import SeriesChart from '@/components/charts/SeriesChart'
+import Donut from '@/components/charts/Donut'
 
 const MONTH_OPTIONS = monthRange(DATA_RANGE.start, DATA_RANGE.end).map((month) => ({
   value: month,
@@ -132,12 +133,28 @@ export default function Tactical() {
   const top5Quakes = rankingRows.slice(0, 5).reduce((sum, row) => sum + Number(row.quakes), 0)
   const top5Share = totalQuakes > 0 ? (top5Quakes / totalQuakes) * 100 : null
 
-  /* Flat provinsi x kelas magnitudo -> satu baris per provinsi (untuk tumpuk). */
+  /* Irisan donat: lima provinsi atas + Lainnya. */
+  const donutData = useMemo(() => {
+    const colors = ['#6366f1', '#8b5cf6', '#0ea5e9', '#a5b4fc', '#c4b5fd']
+    const top5 = rankingRows.slice(0, 5).filter((row) => Number(row.quakes) > 0)
+    const rest = totalQuakes - top5.reduce((sum, row) => sum + Number(row.quakes), 0)
+    const slices = top5.map((row, index) => ({
+      name: row.province,
+      value: Number(row.quakes),
+      color: colors[index % colors.length],
+    }))
+    if (rest > 0) slices.push({ name: 'Lainnya', value: rest, color: '#94a3b8' })
+    return slices
+  }, [rankingRows, totalQuakes])
+
+  /* Flat provinsi x kelas magnitudo -> satu baris per provinsi (untuk tumpuk).
+   * Kunci kelas DIBERSIHKAN dari titik: recharts membaca dataKey sebagai path
+   * (lodash get), jadi '4.0-4.9' gagal dan kelas jadi k1..k4. */
   const contribData = useMemo(() => {
     const byProvince = new Map()
     for (const row of contribRows) {
       if (!byProvince.has(row.province)) byProvince.set(row.province, { province: row.province })
-      byProvince.get(row.province)[row.bucket] = row.quakes
+      byProvince.get(row.province)[`k${row.sort}`] = Number(row.quakes) || 0
     }
     return [...byProvince.values()]
   }, [contribRows])
@@ -205,6 +222,7 @@ export default function Tactical() {
           delta={delta != null ? formatPercent(delta, 1) : undefined}
           caption={`Nasional/terfilter · ${formatMonth(bulan)}`}
           icon={Activity}
+          spark={seriesRows.map((row) => Number(row.quakes))}
           query={series}
         />
         <KpiCard
@@ -238,7 +256,7 @@ export default function Tactical() {
 
       <ChartCard
         title="Jumlah gempa 12 bulan"
-        caption="Batang: jumlah gempa per bulan. Garis putus-putus: baseline bulan yang sama pada tahun sebelumnya."
+        caption="Luas bergradasi: jumlah gempa per bulan. Garis putus-putus: baseline bulan yang sama pada tahun sebelumnya."
         query={series}
         skeleton={<ChartSkeleton height={300} bars={12} withLegend />}
       >
@@ -246,9 +264,9 @@ export default function Tactical() {
           data={seriesRows}
           xKey="month"
           formatX={formatMonthShort}
-          ariaLabel="Grafik batang jumlah gempa 12 bulan dengan garis baseline"
+          ariaLabel="Grafik luas jumlah gempa 12 bulan dengan garis baseline"
           series={[
-            { key: 'quakes', label: 'Jumlah gempa', type: 'bar', color: PALETTE.brand700 },
+            { key: 'quakes', label: 'Jumlah gempa', type: 'area', color: PALETTE.brand700 },
             {
               key: 'baseline',
               label: 'Baseline',
@@ -298,28 +316,49 @@ export default function Tactical() {
         </ChartCard>
       </section>
 
-      <ChartCard
-        title="Kontribusi provinsi teratas"
-        caption="Delapan provinsi dengan gempa terbanyak pada bulan terpilih, dipecah per kelas magnitudo (mengikuti filter kelas)."
-        query={contrib}
-        isEmpty={contribData.length === 0}
-        empty="Tidak ada kontribusi pada rentang dan filter ini."
-        skeleton={<ChartSkeleton height={280} bars={8} withLegend />}
-      >
-        <SeriesChart
-          data={contribData}
-          yKey="province"
-          height={280}
-          layout="vertical"
-          ariaLabel="Grafik batang horizontal kontribusi provinsi per kelas magnitudo"
-          series={[
-            { key: '4.0-4.9', label: 'M 4.0-4.9', type: 'bar', color: '#a5b4fc', stackId: 'm' },
-            { key: '5.0-5.9', label: 'M 5.0-5.9', type: 'bar', color: '#6366f1', stackId: 'm' },
-            { key: '6.0-6.9', label: 'M 6.0-6.9', type: 'bar', color: '#4338ca', stackId: 'm' },
-            { key: '7.0+', label: 'M 7.0+', type: 'bar', color: '#312e81', stackId: 'm' },
-          ]}
-        />
-      </ChartCard>
+      <section className="grid gap-4 md:gap-6 xl:grid-cols-12">
+        <ChartCard
+          className="xl:col-span-8"
+          title="Kontribusi provinsi teratas"
+          caption="Delapan provinsi dengan gempa terbanyak pada bulan terpilih, dipecah per kelas magnitudo (mengikuti filter kelas)."
+          query={contrib}
+          isEmpty={contribData.length === 0}
+          empty="Tidak ada kontribusi pada rentang dan filter ini."
+          skeleton={<ChartSkeleton height={280} bars={8} withLegend />}
+        >
+          <SeriesChart
+            data={contribData}
+            yKey="province"
+            height={280}
+            layout="vertical"
+            ariaLabel="Grafik batang horizontal kontribusi provinsi per kelas magnitudo"
+            series={[
+              { key: 'k1', label: 'M 4.0-4.9', type: 'bar', color: '#a5b4fc', stackId: 'm' },
+              { key: 'k2', label: 'M 5.0-5.9', type: 'bar', color: '#6366f1', stackId: 'm' },
+              { key: 'k3', label: 'M 6.0-6.9', type: 'bar', color: '#4338ca', stackId: 'm' },
+              { key: 'k4', label: 'M 7.0+', type: 'bar', color: '#312e81', stackId: 'm' },
+            ]}
+          />
+        </ChartCard>
+
+        <ChartCard
+          className="xl:col-span-4"
+          title="Pangsa provinsi"
+          caption="Irisan: pangsa lima provinsi atas dari total gempa bulan terpilih; sisanya satu irisan."
+          query={ranking}
+          isEmpty={totalQuakes === 0}
+          empty="Tidak ada gempa pada bulan terpilih."
+          skeleton={<div className="skeleton h-[280px] w-full rounded-control" aria-hidden="true" />}
+        >
+          <Donut
+            data={donutData}
+            height={280}
+            centerValue={top5Share != null ? `${formatNumber(top5Share, 1)}%` : ''}
+            centerLabel="pangsa 5 besar"
+            ariaLabel="Diagram donat pangsa lima provinsi atas terhadap total gempa"
+          />
+        </ChartCard>
+      </section>
 
       <ChartCard
         title="Riwayat wilayah siaga"
@@ -373,16 +412,17 @@ export default function Tactical() {
 
         <ChartCard
           title="Sebaran kedalaman"
-          caption="Jumlah gempa per kelas kedalaman pada bulan terpilih."
+          caption="Jumlah gempa per kelas kedalaman pada bulan terpilih; batang horizontal agar mudah dibandingkan dengan sebaran magnitudo di sebelahnya."
           query={distribution}
           skeleton={<ChartSkeleton height={240} bars={4} withLegend />}
         >
           <SeriesChart
             data={depthRows}
-            xKey="bucket"
+            yKey="bucket"
             height={240}
-            ariaLabel="Histogram sebaran kedalaman"
-            series={[{ key: 'quakes', label: 'Jumlah', type: 'bar', color: PALETTE.brand500 }]}
+            layout="vertical"
+            ariaLabel="Grafik batang horizontal sebaran kedalaman"
+            series={[{ key: 'quakes', label: 'Jumlah', type: 'bar', color: PALETTE.brand700 }]}
           />
         </ChartCard>
       </section>

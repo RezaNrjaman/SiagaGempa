@@ -8,6 +8,7 @@ import StatusBadge from '@/components/ui/StatusBadge'
 import QuakeMap from '@/components/map/QuakeMap'
 import SeriesChart from '@/components/charts/SeriesChart'
 import DepthScatter from '@/components/charts/DepthScatter'
+import RiskRadar from '@/components/charts/RiskRadar'
 import { useRpc } from '@/hooks/useRpc'
 import { PALETTE } from '@/lib/palette'
 import { formatDateWIB, formatMagnitude, formatNumber } from '@/lib/format'
@@ -116,6 +117,36 @@ export default function Strategic() {
     null,
   )
 
+  /* Radar: 3 provinsi teratas, dimensi dinormalkan terhadap nilai tertinggi. */
+  const RADAR_DIMS = [
+    ['Frekuensi', 'quakes'],
+    ['M rata-rata', 'avg_mag'],
+    ['M ≥ 6', 'm6_plus'],
+    ['Skor', 'score'],
+  ]
+  const radarData = useMemo(() => {
+    if (riskRows.length === 0) return []
+    const maxes = Object.fromEntries(
+      RADAR_DIMS.map(([, key]) => [
+        key,
+        Math.max(...riskRows.map((row) => Number(row[key]) || 0), 0),
+      ]),
+    )
+    const top3 = riskRows.slice(0, 3)
+    return RADAR_DIMS.map(([label, key]) => {
+      const row = { dim: label }
+      top3.forEach((r, index) => {
+        row[`p${index}`] = (Number(r[key]) || 0) / (maxes[key] || 1) * 100
+      })
+      return row
+    })
+  }, [riskRows])
+  const radarSeries = riskRows.slice(0, 3).map((row, index) => ({
+    key: `p${index}`,
+    label: row.province,
+    color: ['#6366f1', '#0ea5e9', '#8b5cf6'][index],
+  }))
+
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -136,6 +167,7 @@ export default function Strategic() {
           unit="gempa"
           caption="M ≥ 4.0 di bounding box Indonesia"
           icon={Globe2}
+          spark={yearlyRows.map((row) => Number(row.quakes))}
           query={yearly}
         />
         <KpiCard
@@ -198,9 +230,9 @@ export default function Strategic() {
           data={yearlyRows}
           xKey="year"
           formatValue={(value) => formatNumber(value)}
-          ariaLabel="Grafik tren jumlah gempa tahunan dan gempa M ≥ 6"
+          ariaLabel="Grafik luas tren jumlah gempa tahunan dan garis gempa M ≥ 6"
           series={[
-            { key: 'quakes', label: 'Jumlah gempa', type: 'bar', color: PALETTE.brand700 },
+            { key: 'quakes', label: 'Jumlah gempa', type: 'area', color: PALETTE.brand700 },
             { key: 'm6_plus', label: 'M ≥ 6', type: 'line', color: PALETTE.brand500, axis: 'right' },
           ]}
         />
@@ -305,18 +337,38 @@ export default function Strategic() {
         </ChartCard>
       </section>
 
-      <ChartCard
-        title="20 gempa terkuat"
-        caption="Gempa dengan magnitudo terbesar pada periode 2010-2025 (sumber USGS)."
-        query={significant}
-      >
-        <DataTable
-          columns={significantColumns}
-          rows={significantRows}
-          rowKey={(row) => `${row.event_time}-${row.magnitude}`}
-          maxHeight="420px"
-        />
-      </ChartCard>
+      <section className="grid gap-4 md:gap-6 xl:grid-cols-12">
+        <ChartCard
+          className="xl:col-span-5"
+          title="Profil risiko 3 provinsi teratas"
+          caption="Radar membandingkan bentuk kerawanan: setiap dimensi dinormalkan 0-100 terhadap nilai tertinggi antar provinsi."
+          query={risk}
+          isEmpty={radarSeries.length === 0}
+          empty="Tidak ada provinsi pada rentang ini."
+          skeleton={<div className="skeleton h-[280px] w-full rounded-control" aria-hidden="true" />}
+        >
+          <RiskRadar
+            data={radarData}
+            series={radarSeries}
+            height={280}
+            ariaLabel="Diagram radar profil kerawanan tiga provinsi teratas"
+          />
+        </ChartCard>
+
+        <ChartCard
+          className="xl:col-span-7"
+          title="20 gempa terkuat"
+          caption="Gempa dengan magnitudo terbesar pada periode 2010-2025 (sumber USGS)."
+          query={significant}
+        >
+          <DataTable
+            columns={significantColumns}
+            rows={significantRows}
+            rowKey={(row) => `${row.event_time}-${row.magnitude}`}
+            maxHeight="420px"
+          />
+        </ChartCard>
+      </section>
 
       <p className="text-xs text-text-2">
         Rumus skor kerawanan: 100 × (0,4·F + 0,4·E + 0,2·S), dengan F = jumlah gempa, E = rata-rata

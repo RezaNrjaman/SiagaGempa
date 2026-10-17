@@ -167,6 +167,7 @@ export default function Operational() {
           caption="Feed BMKG live, 24 jam terakhir"
           tone="neutral"
           icon={Activity}
+          spark={hourlyRows.map((row) => Number(row.quakes))}
           query={summary}
         />
         <KpiCard
@@ -201,7 +202,7 @@ export default function Operational() {
         <ChartCard
           className="md:col-span-2"
           title="Ritme gempa 24 jam"
-          caption="Jumlah gempa per jam dari feed BMKG live; jam tanpa gempa digambar sebagai nol."
+          caption="Luas bergradasi: jumlah gempa per jam dari feed BMKG live; jam tanpa gempa digambar sebagai nol."
           query={hourly}
           skeleton={
             <div className="skeleton h-[240px] w-full rounded-control" aria-hidden="true" />
@@ -213,8 +214,8 @@ export default function Operational() {
             height={240}
             formatX={(bucket) => formatTimeWIB(bucket)}
             formatValue={(value) => formatNumber(value)}
-            ariaLabel="Grafik batang jumlah gempa per jam dalam 24 jam terakhir"
-            series={[{ key: 'quakes', label: 'Gempa', type: 'bar', color: PALETTE.brand500 }]}
+            ariaLabel="Grafik luas jumlah gempa per jam dalam 24 jam terakhir"
+            series={[{ key: 'quakes', label: 'Gempa', type: 'area', color: PALETTE.brand500 }]}
           />
         </ChartCard>
 

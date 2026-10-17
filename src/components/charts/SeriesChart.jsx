@@ -1,4 +1,5 @@
 import {
+  Area,
   Bar,
   CartesianGrid,
   ComposedChart,
@@ -56,6 +57,15 @@ export default function SeriesChart({
   layout = 'horizontal',
   ariaLabel,
 }) {
+  /* PostgREST mengirim bigint sebagai string; sumbu numerik eksplisit perlu
+   * angka sungguhan untuk menghitung domain. Koersi semua kunci seri. */
+  const chartData = data.map((row) => {
+    const coerced = { ...row }
+    for (const item of series) {
+      if (coerced[item.key] != null) coerced[item.key] = Number(coerced[item.key]) || 0
+    }
+    return coerced
+  })
   const hasRightAxis = layout === 'horizontal' && series.some((item) => item.axis === 'right')
   const gradientId = (key) => `sg-bar-${String(key).replace(/[^a-zA-Z0-9]/g, '')}`
   const isVertical = layout === 'vertical'
@@ -63,14 +73,23 @@ export default function SeriesChart({
   return (
     <div role="img" aria-label={ariaLabel} style={{ width: '100%', height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <ComposedChart data={chartData} layout={layout} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <defs>
             {series.map((item, index) => {
               const [deep, soft] = SERIES_GRADIENTS[index % SERIES_GRADIENTS.length]
               return (
                 <linearGradient key={item.key} id={gradientId(item.key)} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={deep} stopOpacity={0.95} />
-                  <stop offset="95%" stopColor={soft} stopOpacity={0.75} />
+                  {item.type === 'area' ? (
+                    <>
+                      <stop offset="0%" stopColor={item.color ?? deep} stopOpacity={0.45} />
+                      <stop offset="100%" stopColor={item.color ?? deep} stopOpacity={0.04} />
+                    </>
+                  ) : (
+                    <>
+                      <stop offset="5%" stopColor={deep} stopOpacity={0.95} />
+                      <stop offset="95%" stopColor={soft} stopOpacity={0.75} />
+                    </>
+                  )}
                 </linearGradient>
               )
             })}
@@ -141,6 +160,20 @@ export default function SeriesChart({
                 stroke={item.color}
                 strokeWidth={2.5}
                 strokeDasharray={item.dashed ? '5 4' : undefined}
+                dot={false}
+                activeDot={{ r: 5, strokeWidth: 2, stroke: '#ffffff' }}
+              />
+            ) : item.type === 'area' ? (
+              <Area
+                key={item.key}
+                yAxisId={item.axis ?? 'left'}
+                type="monotone"
+                dataKey={item.key}
+                name={item.label}
+                stroke={item.color}
+                strokeWidth={2.5}
+                fill={gradient}
+                stackId={item.stackId}
                 dot={false}
                 activeDot={{ r: 5, strokeWidth: 2, stroke: '#ffffff' }}
               />

@@ -16,6 +16,44 @@ const TONE_ORB = {
 }
 
 /*
+ * Sparkline mini (svg poligon, tanpa recharts) untuk memberi konteks tren
+ * di kartu KPI tanpa menambah berat; dibaca sebagai bentuk, bukan angka.
+ */
+function Spark({ values, color = '#6366f1' }) {
+  if (!Array.isArray(values) || values.length < 2) return null
+  const nums = values.map((v) => Number(v) || 0)
+  const min = Math.min(...nums)
+  const max = Math.max(...nums)
+  const range = max - min || 1
+  const w = 100
+  const h = 26
+  const points = nums.map((v, i) => [
+    (i / (nums.length - 1)) * w,
+    h - ((v - min) / range) * (h - 3) - 1.5,
+  ])
+  const line = points.map((p) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ')
+  return (
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      preserveAspectRatio="none"
+      className="h-7 w-full"
+      aria-hidden="true"
+    >
+      <polyline points={`0,${h} ${line} ${w},${h}`} fill={color} opacity={0.14} stroke="none" />
+      <polyline
+        points={line}
+        fill="none"
+        stroke={color}
+        strokeWidth={2}
+        vectorEffect="non-scaling-stroke"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+/*
  * Kartu KPI gaya aurora-glass: chip ikon gradasi, pil delta, orb redup di
  * sudut, naik halus saat kursor, dan animasi masuk sekali saat terpasang.
  * Warna tetap tidak membawa makna sendiri: label + delta selalu bertuliskan.
@@ -29,6 +67,7 @@ export default function KpiCard({
   tone = 'neutral',
   compact = false,
   icon: Icon,
+  spark,
   query,
   isEmpty,
   empty,
@@ -85,6 +124,7 @@ export default function KpiCard({
           ) : null}
         </div>
       </QueryState>
+      <Spark values={spark} />
       {caption ? <span className="mt-auto pt-2 text-xs text-text-2">{caption}</span> : null}
     </GlassPanel>
   )
