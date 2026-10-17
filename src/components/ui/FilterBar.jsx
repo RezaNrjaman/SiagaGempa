@@ -7,10 +7,10 @@ function Chip({ label, selected, onClick }) {
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      className={`inline-flex items-center gap-1 rounded-control border px-2.5 py-1 text-xs font-medium transition-colors ${
+      className={`inline-flex items-center gap-1 rounded-control border px-2.5 py-1 text-xs font-medium transition-all duration-200 ${
         selected
-          ? 'border-brand-500 bg-brand-700 text-text-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300'
-          : 'border-white/10 text-text-2/70 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300'
+          ? 'border-brand-700 bg-gradient-to-r from-brand-700 to-brand-500 text-white shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 focus-visible:ring-offset-1'
+          : 'border-slate-200 bg-white/70 text-text-2 hover:border-brand-300 hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300'
       }`}
     >
       {selected ? <Check size={12} strokeWidth={2} aria-hidden="true" /> : null}
@@ -51,7 +51,7 @@ function Field({ field, value, onChange }) {
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="rounded-control border border-white/20 bg-brand-900 px-3 py-1.5 text-sm text-text-1 focus:border-brand-300 focus:outline-none"
+        className="rounded-control border border-slate-200 bg-white/85 px-3 py-1.5 text-sm text-text-1 transition-colors hover:border-brand-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-300/40"
       >
         {field.options.map((option) => (
           <option key={option.value} value={option.value}>

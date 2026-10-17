@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext'
 function FullPageLoader() {
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-brand-300" />
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-200 border-t-brand-500" />
     </div>
   )
 }

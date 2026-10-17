@@ -18,7 +18,7 @@ export default function NotFound() {
         </p>
         <Link
           to={target}
-          className="rounded-control bg-brand-700 px-4 py-2 text-sm font-medium text-text-1 transition-colors hover:bg-brand-500"
+          className="rounded-control bg-gradient-to-r from-brand-700 to-brand-500 px-4 py-2 text-sm font-medium text-white transition-transform hover:scale-[1.03]"
         >
           Kembali ke beranda
         </Link>

@@ -1,23 +1,24 @@
 import GlassPanel from '@/components/ui/GlassPanel'
 import QueryState from '@/components/ui/QueryState'
 
-const TONE_TEXT = {
-  ok: 'text-ok',
-  warn: 'text-warn',
-  danger: 'text-danger',
-  neutral: 'text-text-1',
+const TONE_CHIP = {
+  ok: 'bg-gradient-to-br from-emerald-500 to-teal-400 shadow-emerald-500/30',
+  warn: 'bg-gradient-to-br from-amber-500 to-orange-400 shadow-amber-500/30',
+  danger: 'bg-gradient-to-br from-red-500 to-rose-400 shadow-red-500/30',
+  neutral: 'bg-gradient-to-br from-brand-700 to-brand-500 shadow-brand-500/30',
 }
 
-const TONE_ACCENT = {
-  ok: 'bg-ok',
-  warn: 'bg-warn',
-  danger: 'bg-danger',
-  neutral: 'bg-brand-500',
+const TONE_ORB = {
+  ok: 'from-emerald-400 to-teal-300',
+  warn: 'from-amber-400 to-orange-300',
+  danger: 'from-red-400 to-rose-300',
+  neutral: 'from-brand-500 to-brand-300',
 }
 
 /*
- * Aksen tone hanya pada kartu berstatus (PRD 10.2); kartu netral memakai
- * garis biru merek. Angka tabular agar baris KPI sejajar.
+ * Kartu KPI gaya aurora-glass: chip ikon gradasi, pil delta, orb redup di
+ * sudut, naik halus saat kursor, dan animasi masuk sekali saat terpasang.
+ * Warna tetap tidak membawa makna sendiri: label + delta selalu bertuliskan.
  */
 export default function KpiCard({
   label,
@@ -27,37 +28,61 @@ export default function KpiCard({
   delta,
   tone = 'neutral',
   compact = false,
+  icon: Icon,
   query,
   isEmpty,
   empty,
 }) {
-  const deltaStyle =
-    delta && /^[+-]/.test(delta)
-      ? delta.startsWith('+')
-        ? 'text-warn'
-        : 'text-ok'
-      : 'text-text-2'
+  const up = delta && /^[+-]/.test(delta) ? delta.startsWith('+') : false
+  const deltaChip = delta
+    ? /^[+-]/.test(delta)
+      ? up
+        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        : 'bg-red-50 text-red-700 border-red-200'
+      : 'bg-slate-100 text-text-2 border-slate-200'
+    : null
 
   return (
-    <GlassPanel elevated className="relative flex min-h-[132px] flex-col gap-1 overflow-hidden p-6 md:p-8">
-      <span className={`absolute inset-y-0 left-0 w-[3px] ${TONE_ACCENT[tone]}`} aria-hidden="true" />
-      <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-2">
-        {label}
-      </span>
+    <GlassPanel
+      elevated
+      hoverable
+      className="rise-in relative flex min-h-[132px] flex-col gap-1 overflow-hidden p-5 md:p-6"
+    >
+      <span
+        className={`pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-gradient-to-br ${TONE_ORB[tone]} opacity-[0.12] blur-2xl`}
+        aria-hidden="true"
+      />
+      <div className="flex items-center gap-2.5">
+        {Icon ? (
+          <span
+            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${TONE_CHIP[tone]} text-white shadow-lg`}
+          >
+            <Icon size={17} strokeWidth={1.9} aria-hidden="true" />
+          </span>
+        ) : null}
+        <span className="text-[11px] font-semibold uppercase tracking-[0.07em] text-text-2">
+          {label}
+        </span>
+      </div>
       <QueryState
         query={query}
         isEmpty={isEmpty}
         empty={empty}
-        skeleton={<div className="mt-2 h-8 w-24 animate-pulse rounded-control bg-white/10" />}
+        skeleton={<div className="skeleton mt-2 h-8 w-24 rounded-control" />}
       >
-        <div className="flex items-baseline gap-2 mt-auto">
-          <span
-            className={`tnum font-bold leading-none ${compact ? 'text-2xl' : 'text-[32px]'} ${TONE_TEXT[tone]}`}
-          >
+        <div className="mt-auto flex items-baseline gap-2">
+          <span className={`tnum font-bold leading-none text-text-1 ${compact ? 'text-2xl' : 'text-[32px]'}`}>
             {value}
           </span>
           {unit ? <span className="text-sm text-text-2">{unit}</span> : null}
-          {delta ? <span className={`ml-auto text-xs font-medium ${deltaStyle}`}>{delta}</span> : null}
+          {delta && deltaChip ? (
+            <span
+              className={`tnum ml-auto inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-semibold ${deltaChip}`}
+            >
+              {/^[+-]/.test(delta) ? (up ? '↑' : '↓') : '·'}
+              {String(delta).replace(/^[+-]/, '')}
+            </span>
+          ) : null}
         </div>
       </QueryState>
       {caption ? <span className="mt-auto pt-2 text-xs text-text-2">{caption}</span> : null}

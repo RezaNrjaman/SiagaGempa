@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Compass } from 'lucide-react'
+import { Compass, AlertOctagon, Crosshair, Globe2, Layers } from 'lucide-react'
 import ChartCard from '@/components/ui/ChartCard'
 import ChartSkeleton from '@/components/ui/ChartSkeleton'
 import DataTable from '@/components/ui/DataTable'
@@ -25,9 +25,9 @@ const riskColumns = [
     align: 'right',
     render: (row) => (
       <div className="flex items-center justify-end gap-2">
-        <span className="h-1.5 w-16 overflow-hidden rounded-full bg-white/10">
+        <span className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-200">
           <span
-            className="block h-full rounded-full bg-brand-500"
+            className="bar-fill block h-full rounded-full bg-gradient-to-r from-brand-700 to-brand-500"
             style={{ width: `${Math.min(100, row.score)}%` }}
           />
         </span>
@@ -123,6 +123,7 @@ export default function Strategic() {
           value={yearlyRows.length > 0 ? formatNumber(totals.quakes) : ''}
           unit="gempa"
           caption="M ≥ 4.0 di bounding box Indonesia"
+          icon={Globe2}
           query={yearly}
         />
         <KpiCard
@@ -131,6 +132,7 @@ export default function Strategic() {
           unit="gempa"
           caption="Gempa kuat 2010-2025"
           tone="danger"
+          icon={AlertOctagon}
           query={yearly}
         />
         <KpiCard
@@ -139,6 +141,7 @@ export default function Strategic() {
           compact
           caption={topRisk ? `Skor kerawanan ${formatNumber(topRisk.score, 1)}` : ''}
           tone="neutral"
+          icon={Crosshair}
           query={risk}
         />
         <KpiCard
@@ -146,6 +149,7 @@ export default function Strategic() {
           value={yearlyRows.length > 0 ? formatNumber(totals.shallowPct, 1) : ''}
           unit="%"
           caption="Kedalaman < 70 km"
+          icon={Layers}
           query={yearly}
         />
       </section>
@@ -194,7 +198,7 @@ export default function Strategic() {
         empty="Tidak ada sebaran pada rentang ini."
         skeleton={
           <div
-            className="h-[320px] w-full animate-pulse rounded-control border border-white/10 bg-white/5 md:h-[420px]"
+            className="skeleton h-[320px] w-full rounded-control md:h-[420px]"
             aria-hidden="true"
           />
         }
@@ -222,7 +226,8 @@ export default function Strategic() {
             {priority.map((row, index) => (
               <li
                 key={row.province}
-                className="rounded-control border border-white/10 bg-white/[0.03] p-3 text-sm text-text-1"
+                className="rise-in rounded-control border border-slate-200 bg-white/70 p-3 text-sm text-text-1 transition-colors hover:border-brand-300"
+                style={{ animationDelay: `${index * 70}ms` }}
               >
                 <span className="tnum text-text-2">{index + 1}.</span> {row.province}, skor{' '}
                 <span className="tnum">{formatNumber(row.score, 1)}</span>, faktor dominan:{' '}

@@ -14,7 +14,7 @@ export default function ChartCard({
   children,
 }) {
   return (
-    <GlassPanel elevated className={`flex flex-col gap-3 p-5 md:p-6 ${className}`}>
+    <GlassPanel elevated hoverable className={`flex flex-col gap-3 p-5 md:p-6 ${className}`}>
       <header className="flex items-start justify-between gap-3 border-b border-grid pb-3">
         <div>
           <h2 className="text-base font-semibold text-text-1">{title}</h2>

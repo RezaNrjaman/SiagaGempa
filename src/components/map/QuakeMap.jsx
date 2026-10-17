@@ -13,24 +13,24 @@ const BOUNDS = [
  * sendiri, sehingga legenda dan header tidak pernah tumpang tindih.
  */
 const MAP_CLASS =
-  'sg-map relative h-[320px] w-full overflow-hidden rounded-control border border-white/10 bg-brand-950/60 [isolation:isolate] md:h-[420px]'
+  'sg-map relative h-[320px] w-full overflow-hidden rounded-control border border-white/80 bg-[#eef3ff] [isolation:isolate] md:h-[420px]'
 
 const OUTLINE_STYLE = {
-  color: 'rgba(255, 255, 255, 0.12)',
+  color: 'rgba(30, 41, 89, 0.22)',
   weight: 1,
-  fillColor: PALETTE.brand700,
-  fillOpacity: 0.12,
+  fillColor: PALETTE.brand500,
+  fillOpacity: 0.07,
 }
 
 function PointsLegend() {
   const items = [
     { label: 'M ≥ 6', color: PALETTE.danger },
     { label: 'M 5–5.9', color: PALETTE.warn },
-    { label: 'M < 5', color: PALETTE.brand300 },
+    { label: 'M < 5', color: '#818cf8' },
   ]
   return (
-    <div className="pointer-events-none absolute bottom-3 left-3 z-[10] rounded-control border border-white/15 bg-brand-900/90 px-3 py-2">
-      <p className="mb-1 text-xs font-medium text-text-1">Kelas magnitudo</p>
+    <div className="glass pointer-events-none absolute bottom-3 left-3 z-[10] rounded-control px-3 py-2">
+      <p className="mb-1 text-xs font-semibold text-text-1">Kelas magnitudo</p>
       {items.map((item) => (
         <p key={item.label} className="flex items-center gap-2 text-xs text-text-2">
           <span
@@ -48,8 +48,8 @@ function PointsLegend() {
 function GridLegend({ min, max }) {
   const gradient = `linear-gradient(90deg, ${heatColor(min, min, max)}, ${heatColor(max, min, max)})`
   return (
-    <div className="pointer-events-none absolute bottom-3 left-3 z-[10] rounded-control border border-white/15 bg-brand-900/90 px-3 py-2">
-      <p className="mb-1 text-xs font-medium text-text-1">Jumlah gempa per sel 0,5°</p>
+    <div className="glass pointer-events-none absolute bottom-3 left-3 z-[10] rounded-control px-3 py-2">
+      <p className="mb-1 text-xs font-semibold text-text-1">Jumlah gempa per sel 0,5°</p>
       <div className="h-2 w-32 rounded-full" style={{ background: gradient }} aria-hidden="true" />
       <div className="mt-0.5 flex justify-between text-[10px] text-text-2">
         <span className="tnum">{min}</span>
@@ -80,10 +80,11 @@ function PointsMap({ data, selectedId, onSelect }) {
               radius={3 + quake.magnitude * 1.1 + (isSelected ? 3 : 0)}
               eventHandlers={onSelect ? { click: () => onSelect(quake.id) } : undefined}
               pathOptions={{
-                color: isSelected ? PALETTE.text1 : magColor(quake.magnitude),
+                color: isSelected ? PALETTE.brand950 : magColor(quake.magnitude),
                 fillColor: magColor(quake.magnitude),
                 fillOpacity: isSelected ? 0.9 : 0.7,
                 weight: isSelected ? 2.5 : 1.5,
+                className: isSelected ? 'sg-marker-selected' : undefined,
               }}
             />
           )

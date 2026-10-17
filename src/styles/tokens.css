@@ -1,38 +1,43 @@
 @import 'tailwindcss';
 
-/* Token merek dan status (PRD 10.2). Warna status hanya untuk status. Nilai tetap proyek. */
+/*
+ * Token merek dan status (restyle aurora-glass atas keputusan pemilik;
+ * menyimpang dari PRD 10 tema gelap statis). Warna status hanya untuk status.
+ * Skala biru-indigo tetap identitas proyek.
+ */
 @theme {
-  --color-brand-950: #061a3a;
-  --color-brand-900: #0a2a5e;
-  --color-brand-700: #0f4c9c;
-  --color-brand-500: #1e78d2;
-  --color-brand-300: #7db7f0;
+  --color-brand-950: #141a40;
+  --color-brand-900: #1f2960;
+  --color-brand-700: #4338ca;
+  --color-brand-500: #6366f1;
+  --color-brand-300: #a5b4fc;
 
-  --color-text-1: #f2f7ff;
-  --color-text-2: #a9bcd9;
+  --color-text-1: #1e293b;
+  --color-text-2: #64748b;
 
-  --color-ok: #34c38f;
-  --color-warn: #f5b82e;
-  --color-danger: #f0524f;
+  --color-ok: #059669;
+  --color-warn: #d97706;
+  --color-danger: #dc2626;
 
-  --color-grid: rgb(255 255 255 / 0.1);
+  /* Garis pemisah di dasar terang: indigo sangat tipis, bukan putih. */
+  --color-grid: rgb(30 41 89 / 0.1);
 
   --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  --radius-panel: 16px;
+  --radius-panel: 18px;
   --radius-control: 12px;
 }
 
-/* Variabel permukaan dan latar (PRD 10.3). */
+/* Variabel permukaan kaca terang (restyle). */
 :root {
-  --glass-bg: rgb(255 255 255 / 0.06);
-  --glass-bg-hover: rgb(255 255 255 / 0.10);
-  --glass-border: rgb(255 255 255 / 0.14);
-  --glass-border-soft: rgb(255 255 255 / 0.06);
-  --glass-blur: 16px;
-  --glass-shadow: 0 8px 32px rgb(0 0 0 / 0.30);
-  --card-shadow: 0 4px 20px rgb(0 0 0 / 0.25);
-  --app-gradient: linear-gradient(180deg, #0a2a5e 0%, #061a3a 100%);
+  --glass-bg: rgb(255 255 255 / 0.68);
+  --glass-bg-hover: rgb(255 255 255 / 0.88);
+  --glass-border: rgb(255 255 255 / 0.85);
+  --glass-border-soft: rgb(255 255 255 / 0.55);
+  --glass-blur: 14px;
+  --glass-shadow: 0 8px 28px rgb(37 52 138 / 0.1);
+  --card-shadow: 0 4px 18px rgb(37 52 138 / 0.08);
+  --app-base: #eef1fb;
 }
 
 @media (max-width: 768px) {
@@ -43,6 +48,7 @@
 
 @media (prefers-reduced-transparency: reduce) {
   :root {
-    --glass-bg: rgb(10 42 94 / 0.96);
+    --glass-bg: rgb(255 255 255 / 0.97);
+    --glass-blur: 0px;
   }
 }

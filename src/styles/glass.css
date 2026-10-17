@@ -1,21 +1,24 @@
-/* Satu-satunya pembawa kelas .glass. Maksimum dua lapis bertumpuk (PRD 10.3). */
+/*
+ * Pembawa kelas .glass (versi terang). Maksimum dua lapis bertumpuk.
+ * Restyle aurora-glass atas keputusan pemilik (menyimpang dari PRD 10).
+ */
 .glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(var(--glass-blur)) saturate(120%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(120%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
 }
 
 @supports not (backdrop-filter: blur(1px)) {
   .glass {
-    background: rgb(10 42 94 / 0.92);
+    background: rgb(255 255 255 / 0.94);
   }
 }
 
 @media (prefers-reduced-transparency: reduce) {
   .glass {
-    background: rgb(10 42 94 / 0.96);
+    background: rgb(255 255 255 / 0.97);
     backdrop-filter: none;
   }
 }
@@ -29,4 +32,197 @@
 
 .sg-map .leaflet-control-attribution {
   display: none;
+}
+
+/* ---------------------------------------------------------------------------
+ * Latar aurora (dashboard terang): berlapis gradasi pastel yang bergeser
+ * perlahan. Dipasang pada body::before agar page background tetap satu layer.
+ * ------------------------------------------------------------------------ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42rem 30rem at 88% -8%, rgb(165 180 252 / 0.5), transparent 65%),
+    radial-gradient(38rem 26rem at -12% 22%, rgb(191 219 254 / 0.55), transparent 65%),
+    radial-gradient(30rem 22rem at 55% 112%, rgb(216 180 254 / 0.34), transparent 65%),
+    radial-gradient(24rem 18rem at 10% 95%, rgb(165 243 252 / 0.28), transparent 65%);
+  animation: aurora-drift 28s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(-2.5%, 2%, 0) scale(1.06);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Adegan login (gelap): navy dalam + blob gradasi yang mengapung + grid titik.
+ * ------------------------------------------------------------------------ */
+.login-scene {
+  background:
+    radial-gradient(52rem 36rem at 18% -10%, rgb(124 58 237 / 0.4), transparent 62%),
+    radial-gradient(44rem 30rem at 100% 8%, rgb(37 99 235 / 0.42), transparent 60%),
+    radial-gradient(40rem 30rem at 90% 100%, rgb(219 39 119 / 0.32), transparent 58%),
+    radial-gradient(30rem 22rem at -6% 88%, rgb(6 182 212 / 0.26), transparent 58%),
+    linear-gradient(165deg, #0a1030 0%, #060a20 55%, #0a1233 100%);
+}
+
+.login-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.55;
+  animation: blob-float 16s ease-in-out infinite alternate;
+}
+
+@keyframes blob-float {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3%, -4%, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-3%, 3%, 0) scale(0.96);
+  }
+}
+
+/* Grid titik tipis di pojok panggung login, mengikuti bahasa referensi. */
+.login-dots {
+  background-image: radial-gradient(rgb(255 255 255 / 0.22) 1.2px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Skeleton shimmer: kilau menyapu, jelas lebih hidup daripada pulse polos.
+ * ------------------------------------------------------------------------ */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgb(30 41 89 / 0.08);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.65),
+    transparent
+  );
+  animation: skeleton-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Kartu masuk naik sekali saat pertama terpasang. */
+.rise-in {
+  animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Angkat kartu saat kursor: transisi halus, tidak mengganggu baca. */
+.glass-lift {
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease;
+}
+
+.glass-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px rgb(37 52 138 / 0.16);
+}
+
+/* Titik hidup (data live): dua cincin memancar. */
+.ping-dot {
+  position: relative;
+}
+
+.ping-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  border: 1.5px solid currentColor;
+  opacity: 0.6;
+  animation: ping-ring 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  80%,
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Kilau lewat tombol utama saat hover. */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -80%;
+  height: 100%;
+  width: 55%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  transition: left 0.55s ease;
+}
+
+.btn-shine:hover::before {
+  left: 120%;
+}
+
+/* Penanda gempa terpilih pada peta: denyut pada lingkaran SVG Leaflet. */
+.sg-marker-selected {
+  animation: marker-pulse 1.5s ease-out infinite;
+}
+
+@keyframes marker-pulse {
+  0% {
+    stroke-width: 3;
+    stroke-opacity: 1;
+  }
+  70%,
+  100% {
+    stroke-width: 8;
+    stroke-opacity: 0.15;
+  }
+}
+
+/* Panjang bilah (skor/z-score) tumbuh mulus saat nilai berubah. */
+.bar-fill {
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
 }

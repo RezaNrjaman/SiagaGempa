@@ -6,8 +6,8 @@ body,
 
 body {
   margin: 0;
-  background: var(--app-gradient) fixed;
-  color: #f2f7ff;
+  background-color: var(--app-base);
+  color: var(--color-text-1);
   font-family: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -18,7 +18,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid #7db7f0;
+  outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
 }
 

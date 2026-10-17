@@ -13,16 +13,16 @@ export default function ChartSkeleton({ height = 280, bars = 10, withLegend = tr
         {heights.map((scale, index) => (
           <div
             key={index}
-            className="w-full animate-pulse rounded-t bg-white/10"
+            className="skeleton w-full rounded-t"
             style={{ height: `${Math.round(scale * 100)}%` }}
           />
         ))}
       </div>
-      <div className="mt-2 h-px w-full bg-white/10" />
+      <div className="mt-2 h-px w-full bg-grid" />
       {withLegend ? (
         <div className="mt-2 flex justify-center gap-4">
-          <span className="h-2 w-20 animate-pulse rounded-full bg-white/10" />
-          <span className="h-2 w-16 animate-pulse rounded-full bg-white/10" />
+          <span className="skeleton h-2 w-20 rounded-full" />
+          <span className="skeleton h-2 w-16 rounded-full" />
         </div>
       ) : null}
     </div>

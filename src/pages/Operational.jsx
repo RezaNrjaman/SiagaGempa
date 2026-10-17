@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Activity } from 'lucide-react'
+import { Activity, Radio, Waves, Zap } from 'lucide-react'
 import ChartCard from '@/components/ui/ChartCard'
 import DataTable from '@/components/ui/DataTable'
 import GlassPanel from '@/components/ui/GlassPanel'
@@ -83,7 +83,13 @@ export default function Operational() {
             <StatusBadge label={alertLevel} />
           </div>
         </div>
-        <span className="tnum text-xs text-text-2">
+        <span className="tnum inline-flex items-center gap-2 text-xs text-text-2">
+          <span
+            className={`ping-dot ${data ? 'text-emerald-500' : 'text-slate-400'}`}
+            aria-hidden="true"
+          >
+            <span className={`block h-1.5 w-1.5 rounded-full ${data ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+          </span>
           Diperbarui {data ? `${formatTimeWIB(data.updated_at)} WIB` : '—'}
         </span>
       </div>
@@ -111,6 +117,7 @@ export default function Operational() {
           unit="M"
           caption={data ? `${data.latest_place} · ${formatRelative(data.latest_time)}` : ''}
           tone="neutral"
+          icon={Zap}
           query={summary}
         />
         <KpiCard
@@ -119,6 +126,7 @@ export default function Operational() {
           unit="gempa"
           caption="Feed BMKG live, 24 jam terakhir"
           tone="neutral"
+          icon={Activity}
           query={summary}
         />
         <KpiCard
@@ -127,6 +135,7 @@ export default function Operational() {
           unit="M"
           caption="Maksimum pada tanggal WIB hari ini"
           tone={data && data.max_mag_today >= 6 ? 'danger' : 'warn'}
+          icon={Radio}
           query={summary}
         />
         <KpiCard
@@ -134,6 +143,7 @@ export default function Operational() {
           value={data ? data.tsunami_status : ''}
           caption="Gempa berpotensi tsunami dalam 24 jam"
           tone={data ? (TONE[data.tsunami_status] ?? 'neutral') : 'neutral'}
+          icon={Waves}
           query={summary}
         />
       </section>
@@ -144,7 +154,7 @@ export default function Operational() {
           title="Peta gempa terkini"
           caption="Radius titik sebanding magnitudo. Warna: M < 5 biru, 5–5.9 kuning, ≥ 6 merah. Peta vektor tanpa tile."
           query={latest}
-          skeleton={<div className="h-[320px] w-full animate-pulse rounded-control border border-white/10 bg-white/5" aria-hidden="true" />}
+          skeleton={<div className="skeleton h-[320px] w-full rounded-control md:h-[420px]" aria-hidden="true" />}
         >
           <QuakeMap mode="points" data={rows} selectedId={selectedId} />
         </ChartCard>

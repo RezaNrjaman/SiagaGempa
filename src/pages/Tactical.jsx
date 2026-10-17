@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Layers } from 'lucide-react'
+import { Layers, Activity, MapPin, BellRing } from 'lucide-react'
 import ChartCard from '@/components/ui/ChartCard'
 import DataTable from '@/components/ui/DataTable'
 import FilterBar from '@/components/ui/FilterBar'
@@ -155,6 +155,7 @@ export default function Tactical() {
           unit="gempa"
           delta={delta != null ? formatPercent(delta, 1) : undefined}
           caption={`Nasional/terfilter · ${formatMonth(bulan)}`}
+          icon={Activity}
           query={series}
         />
         <KpiCard
@@ -163,6 +164,7 @@ export default function Tactical() {
           compact
           caption="Jumlah gempa terbanyak pada bulan terpilih"
           tone="neutral"
+          icon={MapPin}
           query={ranking}
         />
         <KpiCard
@@ -171,6 +173,7 @@ export default function Tactical() {
           unit="provinsi"
           tone="warn"
           caption="z-score > 1, minimal 5 tahun pembanding, gempa ≥ 3"
+          icon={BellRing}
           query={ranking}
         />
       </section>
@@ -221,7 +224,7 @@ export default function Tactical() {
             {alertRows.map((row) => (
               <li
                 key={row.province}
-                className="rounded-control border border-white/10 bg-white/[0.03] p-3"
+                className="rounded-control border border-slate-200 bg-white/70 p-3 transition-colors hover:border-brand-300"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-sm font-medium text-text-1">{row.province}</span>
