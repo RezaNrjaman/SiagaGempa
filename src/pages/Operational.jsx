@@ -1,13 +1,15 @@
 import { useState } from 'react'
-import { Activity, Radio, Waves, Zap } from 'lucide-react'
+import { Activity, Ear, Radio, Waves, Zap } from 'lucide-react'
 import ChartCard from '@/components/ui/ChartCard'
 import DataTable from '@/components/ui/DataTable'
 import GlassPanel from '@/components/ui/GlassPanel'
 import KpiCard from '@/components/ui/KpiCard'
 import StatusBadge from '@/components/ui/StatusBadge'
 import QuakeMap from '@/components/map/QuakeMap'
+import SeriesChart from '@/components/charts/SeriesChart'
 import { TONE } from '@/config'
 import { useRpc } from '@/hooks/useRpc'
+import { PALETTE } from '@/lib/palette'
 import {
   formatDateWIB,
   formatMagnitude,
@@ -58,10 +60,39 @@ const columns = [
   },
 ]
 
+const strongColumns = [
+  {
+    key: 'event_time',
+    label: 'Waktu WIB',
+    render: (row) => (
+      <span className="tnum">
+        {formatDateWIB(row.event_time)} · {formatTimeWIB(row.event_time)}
+      </span>
+    ),
+  },
+  {
+    key: 'magnitude',
+    label: 'M',
+    align: 'right',
+    render: (row) => <span className="tnum font-medium">{formatMagnitude(row.magnitude)}</span>,
+  },
+  {
+    key: 'depth_km',
+    label: 'Kedalaman',
+    align: 'right',
+    render: (row) => <span className="tnum">{formatNumber(row.depth_km)} km</span>,
+  },
+  { key: 'location_text', label: 'Lokasi' },
+  { key: 'province', label: 'Provinsi' },
+]
+
 export default function Operational() {
   const [selectedId, setSelectedId] = useState(null)
   const summary = useRpc('ops_summary', null, 'live')
   const latest = useRpc('ops_latest', { p_limit: 15 }, 'live')
+  const hourly = useRpc('ops_hourly', null, 'live')
+  const felt = useRpc('ops_felt', { p_limit: 10 }, 'live')
+  const strong = useRpc('ops_strong_recent', { p_limit: 10 })
 
   /* Semua RPC `returns table(...)` -> PostgREST selalu mengirim larik baris.
      ops_summary mengembalikan tepat satu baris, jadi harus dibuka di sini;
@@ -69,6 +100,9 @@ export default function Operational() {
   const data = Array.isArray(summary.data) ? (summary.data[0] ?? null) : summary.data
   const rows = latest.data ?? []
   const hasLatest = rows.length > 0
+  const hourlyRows = hourly.data ?? []
+  const feltRows = felt.data ?? []
+  const strongRows = strong.data ?? []
 
   /* OPS-08: tanpa baris ringkasan berarti tidak ada gempa 24 jam -> level
      Hijau, bukan "Memuat" yang menggantung. */
@@ -115,7 +149,7 @@ export default function Operational() {
       ) : null}
 
       <section
-        className={`grid gap-4 sm:grid-cols-2 xl:grid-cols-4${summaryEmpty ? ' hidden' : ''}`}
+        className={`grid gap-4 sm:grid-cols-2 xl:grid-cols-5${summaryEmpty ? ' hidden' : ''}`}
       >
         <KpiCard
           label="Gempa terbaru"
@@ -152,6 +186,71 @@ export default function Operational() {
           icon={Waves}
           query={summary}
         />
+        <KpiCard
+          label="Dirasakan 48 jam"
+          value={feltRows.length > 0 || !felt.isPending ? formatNumber(feltRows.length) : ''}
+          unit="gempa"
+          caption="Gempa dengan laporan magnitudo pada feed BMKG"
+          tone="neutral"
+          icon={Ear}
+          query={felt}
+        />
+      </section>
+
+      <section className="grid gap-4 md:gap-6 md:grid-cols-3">
+        <ChartCard
+          className="md:col-span-2"
+          title="Ritme gempa 24 jam"
+          caption="Jumlah gempa per jam dari feed BMKG live; jam tanpa gempa digambar sebagai nol."
+          query={hourly}
+          skeleton={
+            <div className="skeleton h-[240px] w-full rounded-control" aria-hidden="true" />
+          }
+        >
+          <SeriesChart
+            data={hourlyRows}
+            xKey="bucket"
+            height={240}
+            formatX={(bucket) => formatTimeWIB(bucket)}
+            formatValue={(value) => formatNumber(value)}
+            ariaLabel="Grafik batang jumlah gempa per jam dalam 24 jam terakhir"
+            series={[{ key: 'quakes', label: 'Gempa', type: 'bar', color: PALETTE.brand500 }]}
+          />
+        </ChartCard>
+
+        <ChartCard
+          title="Gempa terasa (48 jam)"
+          caption="Magnitude tercatat karena ada laporan masyarakat."
+          query={felt}
+          isEmpty={feltRows.length === 0}
+          empty="Belum ada laporan gempa terasa dalam 48 jam terakhir."
+          skeleton={
+            <div className="flex flex-col gap-2" aria-hidden="true">
+              {[0, 1, 2, 3].map((row) => (
+                <div key={row} className="skeleton h-14 w-full rounded-control" />
+              ))}
+            </div>
+          }
+        >
+          <ul className="flex max-h-[240px] flex-col gap-2 overflow-y-auto pr-1">
+            {feltRows.map((row) => (
+              <li
+                key={row.id}
+                className="rounded-control border border-slate-200 bg-white/70 p-3 transition-colors hover:border-brand-300"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="tnum text-xs font-medium text-text-1">
+                    {formatTimeWIB(row.event_time)} · M {formatMagnitude(row.magnitude)}
+                  </span>
+                  <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                    {row.felt_info}
+                  </span>
+                </div>
+                <p className="mt-1 line-clamp-2 text-xs text-text-2">{row.location_text}</p>
+              </li>
+            ))}
+          </ul>
+        </ChartCard>
       </section>
 
       <section className="grid gap-4 md:gap-6 md:grid-cols-2">
@@ -182,12 +281,27 @@ export default function Operational() {
             maxHeight="420px"
           />
         </ChartCard>
+
+        <ChartCard
+          className="md:col-span-2"
+          title="Gempa kuat katalog USGS (M ≥ 4,5)"
+          caption="Katalog historis USGS berhenti pada Desember 2025; periode setelahnya diisi feed BMKG live di tabel-peta di atas."
+          query={strong}
+          skeleton={<div className="skeleton h-[220px] w-full rounded-control" aria-hidden="true" />}
+        >
+          <DataTable
+            columns={strongColumns}
+            rows={strongRows}
+            rowKey={(row) => row.id}
+            maxHeight="260px"
+          />
+        </ChartCard>
       </section>
 
       <p className="text-xs text-text-2">
         {/* OPS-07: keterangan permanen tentang cakupan feed. */}
-        Feed BMKG berisi gempa M ≥ 5 atau yang dirasakan. Sumber: BMKG (live). Proyek
-        akademik, bukan produk resmi BMKG.
+        Feed BMKG berisi gempa M ≥ 5 atau yang dirasakan. Sumber: BMKG (live) · katalog USGS
+        2010-2025. Proyek akademik, bukan produk resmi BMKG.
       </p>
     </div>
   )

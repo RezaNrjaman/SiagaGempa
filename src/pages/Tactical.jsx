@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Layers, Activity, MapPin, BellRing } from 'lucide-react'
+import { Layers, Activity, MapPin, BellRing, PieChart } from 'lucide-react'
 import ChartCard from '@/components/ui/ChartCard'
 import DataTable from '@/components/ui/DataTable'
 import FilterBar from '@/components/ui/FilterBar'
@@ -37,6 +37,21 @@ const rankingColumns = [
     label: 'Baseline',
     align: 'right',
     render: (row) => <span className="tnum text-text-2">{formatNumber(row.baseline, 1)}</span>,
+  },
+  {
+    key: 'delta',
+    label: 'Δ',
+    align: 'right',
+    render: (row) => {
+      if (!row.baseline) return <span className="text-text-2">—</span>
+      const pct = ((row.quakes - row.baseline) / row.baseline) * 100
+      const tone = pct > 0 ? 'text-warn' : pct < 0 ? 'text-ok' : 'text-text-2'
+      return (
+        <span className={`tnum ${tone}`}>
+          {formatPercent(pct, 1)}
+        </span>
+      )
+    },
   },
   {
     key: 'z_score',
@@ -77,6 +92,13 @@ export default function Tactical() {
     p_mag: mag,
     p_depth: dalam,
   })
+  const contrib = useRpc('tactical_contrib', {
+    p_month: pMonth,
+    p_mag: mag,
+    p_depth: dalam,
+    p_provinces: 8,
+  })
+  const alertHistory = useRpc('tactical_alert_history', null)
 
   const updateParams = (partial) => {
     const next = new URLSearchParams(searchParams)
@@ -98,10 +120,37 @@ export default function Tactical() {
 
   const seriesRows = series.data ?? []
   const rankingRows = ranking.data ?? []
+  const contribRows = contrib.data ?? []
+  const alertRows = alertHistory.data ?? []
   const current = seriesRows.length > 0 ? seriesRows[seriesRows.length - 1] : null
   const delta = current && current.baseline ? ((current.quakes - current.baseline) / current.baseline) * 100 : null
   const topProvince = rankingRows[0]?.province ?? '—'
-  const alertRows = rankingRows.filter((row) => row.is_alert)
+  const provinceAlertRows = rankingRows.filter((row) => row.is_alert)
+
+  /* Share lima provinsi teratas dari total gempa bulan terpilih (semua provinsi). */
+  const totalQuakes = rankingRows.reduce((sum, row) => sum + Number(row.quakes), 0)
+  const top5Quakes = rankingRows.slice(0, 5).reduce((sum, row) => sum + Number(row.quakes), 0)
+  const top5Share = totalQuakes > 0 ? (top5Quakes / totalQuakes) * 100 : null
+
+  /* Flat provinsi x kelas magnitudo -> satu baris per provinsi (untuk tumpuk). */
+  const contribData = useMemo(() => {
+    const byProvince = new Map()
+    for (const row of contribRows) {
+      if (!byProvince.has(row.province)) byProvince.set(row.province, { province: row.province })
+      byProvince.get(row.province)[row.bucket] = row.quakes
+    }
+    return [...byProvince.values()]
+  }, [contribRows])
+
+  /* Riwayat siaga per bulan (sudah urut desc dari RPC). */
+  const alertByMonth = useMemo(() => {
+    const byMonth = new Map()
+    for (const row of alertRows) {
+      if (!byMonth.has(row.month)) byMonth.set(row.month, [])
+      byMonth.get(row.month).push(row)
+    }
+    return [...byMonth.entries()]
+  }, [alertRows])
 
   const magnitudeRows = useMemo(
     () => (distribution.data ?? []).filter((row) => row.dimension === 'magnitude'),
@@ -169,11 +218,20 @@ export default function Tactical() {
         />
         <KpiCard
           label="Wilayah siaga"
-          value={rankingRows.length > 0 ? formatNumber(alertRows.length) : ''}
+          value={rankingRows.length > 0 ? formatNumber(provinceAlertRows.length) : ''}
           unit="provinsi"
           tone="warn"
           caption="z-score > 1, minimal 5 tahun pembanding, gempa ≥ 3"
           icon={BellRing}
+          query={ranking}
+        />
+        <KpiCard
+          label="Kontribusi 5 besar"
+          value={top5Share != null ? formatNumber(top5Share, 1) : ''}
+          unit="%"
+          tone="neutral"
+          caption="Pangsa lima provinsi atas dari total gempa bulan ini"
+          icon={PieChart}
           query={ranking}
         />
       </section>
@@ -214,14 +272,14 @@ export default function Tactical() {
 
         <ChartCard
           className="xl:col-span-5"
-          title="Wilayah siaga"
+          title="Wilayah siaga bulan ini"
           caption="Provinsi dengan z-score > 1 dan jumlah gempa ≥ 3."
           query={ranking}
-          isEmpty={alertRows.length === 0}
+          isEmpty={provinceAlertRows.length === 0}
           empty="Tidak ada wilayah siaga pada bulan ini."
         >
           <ul className="flex flex-col gap-2">
-            {alertRows.map((row) => (
+            {provinceAlertRows.map((row) => (
               <li
                 key={row.province}
                 className="rounded-control border border-slate-200 bg-white/70 p-3 transition-colors hover:border-brand-300"
@@ -239,6 +297,63 @@ export default function Tactical() {
           </ul>
         </ChartCard>
       </section>
+
+      <ChartCard
+        title="Kontribusi provinsi teratas"
+        caption="Delapan provinsi dengan gempa terbanyak pada bulan terpilih, dipecah per kelas magnitudo (mengikuti filter kelas)."
+        query={contrib}
+        isEmpty={contribData.length === 0}
+        empty="Tidak ada kontribusi pada rentang dan filter ini."
+        skeleton={<ChartSkeleton height={280} bars={8} withLegend />}
+      >
+        <SeriesChart
+          data={contribData}
+          yKey="province"
+          height={280}
+          layout="vertical"
+          ariaLabel="Grafik batang horizontal kontribusi provinsi per kelas magnitudo"
+          series={[
+            { key: '4.0-4.9', label: 'M 4.0-4.9', type: 'bar', color: '#a5b4fc', stackId: 'm' },
+            { key: '5.0-5.9', label: 'M 5.0-5.9', type: 'bar', color: '#6366f1', stackId: 'm' },
+            { key: '6.0-6.9', label: 'M 6.0-6.9', type: 'bar', color: '#4338ca', stackId: 'm' },
+            { key: '7.0+', label: 'M 7.0+', type: 'bar', color: '#312e81', stackId: 'm' },
+          ]}
+        />
+      </ChartCard>
+
+      <ChartCard
+        title="Riwayat wilayah siaga"
+        caption="Bulan-bulan ketika sebuah provinsi melampaui ambang (z > 1, gempa ≥ 3, minimal 5 tahun pembanding) dalam 24 bulan terakhir katalog."
+        query={alertHistory}
+        isEmpty={alertByMonth.length === 0}
+        empty="Tidak ada wilayah siaga dalam 24 bulan terakhir katalog."
+        skeleton={<div className="skeleton h-[180px] w-full rounded-control" aria-hidden="true" />}
+      >
+        <ol className="flex flex-col gap-2">
+          {alertByMonth.map(([month, rows]) => (
+            <li
+              key={month}
+              className="rise-in flex flex-wrap items-center gap-2 rounded-control border border-slate-200 bg-white/70 p-3"
+            >
+              <span className="tnum rounded-full border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-xs font-semibold text-brand-700">
+                {formatMonth(month.slice(0, 7))}
+              </span>
+              {rows.map((row) => (
+                <span
+                  key={row.province}
+                  className="inline-flex items-center gap-1.5 rounded-control border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700"
+                >
+                  <StatusBadge label="Siaga" tone="warn" /> {row.province}
+                  <span className="tnum text-text-2">
+                    {formatNumber(row.quakes)} vs {formatNumber(row.baseline, 1)} (z{' '}
+                    {formatNumber(row.z_score, 1)})
+                  </span>
+                </span>
+              ))}
+            </li>
+          ))}
+        </ol>
+      </ChartCard>
 
       <section className="grid gap-4 md:gap-6 md:grid-cols-2">
         <ChartCard

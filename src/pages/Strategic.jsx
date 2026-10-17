@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Compass, AlertOctagon, Crosshair, Globe2, Layers } from 'lucide-react'
+import { Compass, AlertOctagon, Crosshair, Globe2, Layers, Mountain, CalendarRange } from 'lucide-react'
 import ChartCard from '@/components/ui/ChartCard'
 import ChartSkeleton from '@/components/ui/ChartSkeleton'
 import DataTable from '@/components/ui/DataTable'
@@ -7,6 +7,7 @@ import KpiCard from '@/components/ui/KpiCard'
 import StatusBadge from '@/components/ui/StatusBadge'
 import QuakeMap from '@/components/map/QuakeMap'
 import SeriesChart from '@/components/charts/SeriesChart'
+import DepthScatter from '@/components/charts/DepthScatter'
 import { useRpc } from '@/hooks/useRpc'
 import { PALETTE } from '@/lib/palette'
 import { formatDateWIB, formatMagnitude, formatNumber } from '@/lib/format'
@@ -87,9 +88,13 @@ export default function Strategic() {
   const risk = useRpc('strategic_risk')
   const heat = useRpc('strategic_heat')
   const significant = useRpc('strategic_significant')
+  const magHist = useRpc('strategic_mag_hist')
+  const scatter = useRpc('strategic_scatter', { p_sample: 800 })
 
   const yearlyRows = yearly.data ?? []
   const riskRows = risk.data ?? []
+  const magHistRows = magHist.data ?? []
+  const scatterRows = scatter.data ?? []
   const heatRows = heat.data ?? []
   const significantRows = significant.data ?? []
 
@@ -104,6 +109,13 @@ export default function Strategic() {
   const topRisk = riskRows[0]
   const priority = riskRows.slice(0, 5)
 
+  /* Gempa terbesar katalog + tahun dengan jumlah gempa tertinggi. */
+  const strongest = significantRows[0] ?? null
+  const busiestYear = yearlyRows.reduce(
+    (best, row) => (row.quakes > (best?.quakes ?? -1) ? row : best),
+    null,
+  )
+
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -117,7 +129,7 @@ export default function Strategic() {
         <span className="text-xs text-text-2">Snapshot historis USGS 2010-2025</span>
       </div>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <KpiCard
           label="Total gempa 2010-2025"
           value={yearlyRows.length > 0 ? formatNumber(totals.quakes) : ''}
@@ -150,6 +162,28 @@ export default function Strategic() {
           unit="%"
           caption="Kedalaman < 70 km"
           icon={Layers}
+          query={yearly}
+        />
+        <KpiCard
+          label="M terbesar katalog"
+          value={strongest ? formatMagnitude(strongest.magnitude) : ''}
+          unit="M"
+          caption={
+            strongest
+              ? `${formatDateWIB(strongest.event_time)} · ${strongest.province}`
+              : ''
+          }
+          tone="danger"
+          icon={Mountain}
+          query={significant}
+        />
+        <KpiCard
+          label="Tahun teraktif"
+          value={busiestYear ? formatNumber(busiestYear.quakes) : ''}
+          unit="gempa"
+          caption={busiestYear ? `Tahun ${busiestYear.year}` : ''}
+          tone="neutral"
+          icon={CalendarRange}
           query={yearly}
         />
       </section>
@@ -189,6 +223,39 @@ export default function Strategic() {
           ]}
         />
       </ChartCard>
+
+      <section className="grid gap-4 md:gap-6 md:grid-cols-2">
+        <ChartCard
+          title="Sebaran magnitudo"
+          caption="Seluruh gempa M ≥ 4 pada katalog USGS 2010-2025, kelas langkah 0,5. Ekor panjang: gempa besar jarang namun menentukan risiko."
+          query={magHist}
+          skeleton={<ChartSkeleton height={260} bars={8} withLegend />}
+        >
+          <SeriesChart
+            data={magHistRows}
+            xKey="bucket"
+            height={260}
+            formatValue={(value) => formatNumber(value)}
+            ariaLabel="Histogram sebaran magnitudo katalog penuh"
+            series={[{ key: 'quakes', label: 'Jumlah gempa', type: 'bar', color: PALETTE.brand500 }]}
+          />
+        </ChartCard>
+
+        <ChartCard
+          title="Kedalaman × magnitudo"
+          caption="Sampel acak 800 gempa dari katalog. Sumbu kedalaman dibalik: permukaan di atas, populasi dangkal dan dalam terlihat terpisah."
+          query={scatter}
+          isEmpty={scatterRows.length === 0}
+          empty="Tidak ada sampel pada rentang ini."
+          skeleton={<div className="skeleton h-[260px] w-full rounded-control" aria-hidden="true" />}
+        >
+          <DepthScatter
+            data={scatterRows}
+            height={260}
+            ariaLabel="Diagram titik sebaran kedalaman terhadap magnitudo"
+          />
+        </ChartCard>
+      </section>
 
       <ChartCard
         title="Peta kerawanan (sel 0,5°)"

@@ -35,6 +35,8 @@ function GlassTooltip({ active, payload, label, formatLabel, formatValue }) {
  * Satu komponen untuk semua grafik (PRD 10.5). Batang memakai gradasi per seri
  * (indigo/sky/violet) agar dasar terang tetap bertenaga; tooltip kaca punya
  * latar putih sehingga terbaca di atas batang.
+ * layout='vertical' membuat batang horizontal (kategori di sumbu biasa;
+ * dipakai untuk peringkat provinsi bertumpuk).
  */
 const SERIES_GRADIENTS = [
   ['#6366f1', '#a5b4fc'],
@@ -45,14 +47,18 @@ const SERIES_GRADIENTS = [
 export default function SeriesChart({
   data,
   xKey,
+  yKey,
   series,
   height = 280,
   formatX,
   formatValue,
+  formatY,
+  layout = 'horizontal',
   ariaLabel,
 }) {
-  const hasRightAxis = series.some((item) => item.axis === 'right')
+  const hasRightAxis = layout === 'horizontal' && series.some((item) => item.axis === 'right')
   const gradientId = (key) => `sg-bar-${String(key).replace(/[^a-zA-Z0-9]/g, '')}`
+  const isVertical = layout === 'vertical'
 
   return (
     <div role="img" aria-label={ariaLabel} style={{ width: '100%', height }}>
@@ -69,22 +75,45 @@ export default function SeriesChart({
               )
             })}
           </defs>
-          <CartesianGrid stroke={PALETTE.grid} vertical={false} />
-          <XAxis
-            dataKey={xKey}
-            tickFormatter={formatX}
-            tick={{ fill: PALETTE.text2, fontSize: 12 }}
-            axisLine={{ stroke: PALETTE.grid }}
-            tickLine={false}
-            minTickGap={12}
-          />
-          <YAxis
-            yAxisId="left"
-            tick={{ fill: PALETTE.text2, fontSize: 12 }}
-            axisLine={false}
-            tickLine={false}
-            width={44}
-          />
+          <CartesianGrid stroke={PALETTE.grid} vertical={isVertical} horizontal={!isVertical} />
+          {isVertical ? (
+            <>
+              <XAxis
+                type="number"
+                tick={{ fill: PALETTE.text2, fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={formatX}
+              />
+              <YAxis
+                type="category"
+                dataKey={yKey}
+                tick={{ fill: PALETTE.text2, fontSize: 11 }}
+                axisLine={{ stroke: PALETTE.grid }}
+                tickLine={false}
+                width={118}
+                tickFormatter={formatY}
+              />
+            </>
+          ) : (
+            <>
+              <XAxis
+                dataKey={xKey}
+                tickFormatter={formatX}
+                tick={{ fill: PALETTE.text2, fontSize: 12 }}
+                axisLine={{ stroke: PALETTE.grid }}
+                tickLine={false}
+                minTickGap={12}
+              />
+              <YAxis
+                yAxisId="left"
+                tick={{ fill: PALETTE.text2, fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                width={44}
+              />
+            </>
+          )}
           {hasRightAxis ? (
             <YAxis
               yAxisId="right"
@@ -118,13 +147,13 @@ export default function SeriesChart({
             ) : (
               <Bar
                 key={item.key}
-                yAxisId={item.axis ?? 'left'}
+                yAxisId={isVertical ? undefined : (item.axis ?? 'left')}
                 dataKey={item.key}
                 name={item.label}
                 fill={item.stackId ? item.color : gradient}
                 stackId={item.stackId}
-                radius={item.stackId ? undefined : [6, 6, 0, 0]}
-                maxBarSize={44}
+                radius={item.stackId ? undefined : isVertical ? [0, 6, 6, 0] : [6, 6, 0, 0]}
+                maxBarSize={isVertical ? 20 : 44}
               />
             )
           })}
